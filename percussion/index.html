@@ -264,7 +264,7 @@
 </div>
 
 <script>
-const PXM = 5;                 // 1m = 5px
+const PXM = 12;                // 1m = 12px（薄層の名前が読める縮尺）
 const SUB = 4;                 // 1打撃を4分割した音楽グリッド
 const CROWN_PX = -108;         // やぐらクラウン滑車のy（stack座標）
 const SURF_CASING = 6;         // 表層ケーシング m
@@ -344,11 +344,11 @@ function render(){
   $('#hole').style.height='0px';
   $('#casing').style.height='0px';
   const rmax=Math.ceil((G.max+8)/5)*5;
-  for(let m=0;m<=rmax;m+=5){
+  for(let m=0;m<=rmax;m+=1){                 // 1目盛り1m、5mごとに太線と数字
     const t=document.createElement('div');
-    t.className='tick'+(m%20===0?' major':'');
+    t.className='tick'+(m%5===0?' major':'');
     t.style.top=m*PXM+'px';
-    if(m%20===0) t.innerHTML='<span>'+m+'</span>';
+    if(m%5===0) t.innerHTML='<span>'+m+'</span>';
     ruler.appendChild(t);
   }
   // やぐら・掘りカス山を孔芯に合わせる
@@ -588,7 +588,7 @@ function cycleStep(t){
 function addPile(bailedM){
   const L=layerAt(Math.max(0,depth-.5));
   const seg=document.createElement('div');
-  seg.style.height=Math.max(2,bailedM*PXM*.4)+'px';
+  seg.style.height=Math.max(2,bailedM*PXM*.16)+'px';
   seg.style.width=(34+Math.random()*14)+'px';
   seg.style.background=L.c;
   seg.style.filter='brightness(.82)';
@@ -788,7 +788,7 @@ function paint(){
     const spb=60/bpm;
     let p=(now-lastBlowT)/spb; p=Math.min(1,Math.max(0,p));
     const prof=p<.65?p/.65:1-Math.pow((p-.65)/.35,2);
-    ty=depth-prof*(stroke/100)*4;             // 持ち上げは誇張表示
+    ty=depth-prof*(stroke/100)*20/PXM;        // 持ち上げは誇張表示（px基準）
   }
   camY+=(Math.max(-6,ty)-camY)*Math.min(1,dt*5);
   $('#stack').style.transform='translateY('+(anchor-camY*PXM)+'px)';
