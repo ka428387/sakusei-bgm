@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>さく井業BGM生成器 ロータリー編</title>
+<meta name="description" content="井戸を掘ると、地層が音楽になる。ブラウザだけで動くさく井（井戸掘り）シミュレーター。粘土はこもり、砂れきはざらつき、破砕帯は鳴る。">
+<meta name="theme-color" content="#1C1713">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231C1713'/%3E%3Crect x='14' y='3' width='4' height='16' fill='%23B6A88E'/%3E%3Cpath d='M11 17h10v6l-5 6-5-6z' fill='%23C9BCA6'/%3E%3C/svg%3E">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="さく井業BGM生成器">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:title" content="さく井業BGM生成器 ロータリー編">
+<meta property="og:description" content="井戸を掘ると、地層が音楽になる。粘土はこもり、砂れきはざらつき、破砕帯は鳴る。">
+<meta property="og:url" content="https://ka428387.github.io/sakusei-bgm/rotary/">
+<meta property="og:image" content="https://ka428387.github.io/sakusei-bgm/og-rotary.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="掘進長96.0mまで掘り進んだ柱状図。泥岩・砂岩・花こう岩・破砕帯の地層と掘削孔が並ぶ画面。">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="さく井業BGM生成器 ロータリー編">
+<meta name="twitter:description" content="井戸を掘ると、地層が音楽になる。粘土はこもり、砂れきはざらつき、破砕帯は鳴る。">
+<meta name="twitter:image" content="https://ka428387.github.io/sakusei-bgm/og-rotary.png">
+<style>
+  :root{
+    --ink:#1C1713;
+    --paper:#E8E2D6;
+    --line:#3A322A;
+    --rust:#9C4A22;
+    --water:#1F6E8C;
+    --spring:#69C6DE;
+    --px-m:5; /* px per meter, mirrored in JS */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+    display:flex;flex-direction:column;
+    height:100dvh;
+  }
+  .mincho{font-family:"Hiragino Mincho ProN","Yu Mincho",serif}
+
+  header{
+    padding:14px 16px 10px;
+    display:flex;align-items:baseline;gap:10px;
+    border-bottom:1px solid #3A322A;
+    flex:none;
+  }
+  header h1{
+    font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
+    font-size:17px;font-weight:600;letter-spacing:.14em;
+  }
+  header .sub{font-size:10.5px;color:#8A8073;letter-spacing:.05em}
+
+  /* ── 柱状図 ── */
+  .log{
+    position:relative;flex:1;min-height:0;overflow:hidden;
+    background:#12100E;
+  }
+  .stack{position:absolute;left:0;right:0;top:0;will-change:transform}
+  .ruler{position:absolute;left:0;top:0;width:46px;bottom:0}
+  .tick{position:absolute;left:0;width:46px;border-top:1px solid rgba(232,226,214,.16)}
+  .tick.major{border-top-color:rgba(232,226,214,.42)}
+  .tick span{
+    position:absolute;right:6px;top:-8px;font-size:10px;
+    color:#9A9084;font-variant-numeric:tabular-nums;
+  }
+  .strata{position:absolute;left:46px;right:0;top:0}
+  .layer{position:relative;width:100%}
+  .layer .nm{
+    position:absolute;left:10px;top:6px;
+    font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
+    font-size:13px;letter-spacing:.22em;
+    color:rgba(255,250,240,.86);
+    text-shadow:0 1px 3px rgba(0,0,0,.55);
+  }
+  /* 掘削孔（depth追従） */
+  .hole{
+    position:absolute;top:0;width:26px;left:calc(46px + 34%);
+    background:#0A0908;
+    box-shadow:inset 2px 0 0 rgba(0,0,0,.6), inset -2px 0 0 rgba(0,0,0,.6);
+  }
+  .casing{position:absolute;width:34px;left:calc(46px + 34% - 4px);top:0;
+    background:repeating-linear-gradient(180deg,rgba(190,180,160,.30) 0 3px,transparent 3px 11px);
+    border-left:1px solid rgba(200,190,170,.45);border-right:1px solid rgba(200,190,170,.45)}
+  .fill{position:absolute;width:26px;left:calc(46px + 34%);bottom:0;
+    background:linear-gradient(180deg,rgba(105,198,222,.85),rgba(31,110,140,.95));}
+
+  /* 掘進線 */
+  .bitline{position:absolute;left:0;right:0;pointer-events:none}
+  .bitline .rule{position:absolute;left:46px;right:0;height:1px;background:rgba(255,140,60,.5)}
+  .bitline .bit{
+    position:absolute;left:calc(46px + 34% + 1px);width:22px;height:26px;top:-13px;
+    background:linear-gradient(180deg,#C9BCA6,#7C6E5C);
+    clip-path:polygon(0 0,100% 0,100% 55%,50% 100%,0 55%);
+  }
+  .bitline .bit.spin{animation:jig .09s linear infinite}
+  @keyframes jig{0%{transform:translateX(-.6px)}50%{transform:translateX(.6px)}100%{transform:translateX(-.6px)}}
+  .bitline .bit.stuck{animation:stuckjig .55s ease-in-out infinite}
+  @keyframes stuckjig{0%,100%{transform:translateY(0)}45%{transform:translateY(-4px)}62%{transform:translateY(1.5px)}}
+  /* 放棄孔：セメントで埋めた古い孔と残置ビット */
+  .scar{position:absolute;width:14px;background:rgba(8,7,6,.78);
+    box-shadow:inset 1px 0 0 rgba(0,0,0,.7),inset -1px 0 0 rgba(0,0,0,.7)}
+  .scar .cement{position:absolute;top:0;left:0;right:0;height:30px;
+    background:repeating-linear-gradient(180deg,rgba(190,185,175,.55) 0 4px,rgba(150,145,135,.45) 4px 8px)}
+  .scar .lostbit{position:absolute;bottom:1px;left:1px;width:12px;height:13px;opacity:.9;
+    background:linear-gradient(180deg,#A99C86,#6B5F4F);
+    clip-path:polygon(0 0,100% 0,100% 55%,50% 100%,0 55%)}
+  .log.quake{animation:quake .5s linear}
+  @keyframes quake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+  .bitline .rod{
+    position:absolute;left:calc(46px + 34% + 8px);width:8px;top:-2000px;height:2000px;
+    background:linear-gradient(90deg,#4A4238,#B6A88E,#4A4238);
+  }
+  .readout{
+    position:absolute;right:12px;text-align:right;top:-42px;
+  }
+  .readout .d{
+    font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
+    font-size:34px;line-height:1;font-variant-numeric:tabular-nums;
+    text-shadow:0 2px 8px rgba(0,0,0,.8);
+  }
+  .readout .u{font-size:11px;color:#B9AE9C;letter-spacing:.1em}
+
+  .flash{
+    position:absolute;inset:0;pointer-events:none;opacity:0;
+    background:radial-gradient(circle at 50% 60%,rgba(140,225,245,.75),transparent 62%);
+  }
+  .flash.on{animation:burst 2.4s ease-out}
+  @keyframes burst{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+  .shout{
+    position:absolute;left:0;right:0;top:44%;text-align:center;pointer-events:none;
+    font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
+    font-size:30px;letter-spacing:.3em;color:#D8F4FB;opacity:0;
+    text-shadow:0 0 18px rgba(105,198,222,.9);
+  }
+  .shout.on{animation:shout 2.6s ease-out}
+  @keyframes shout{0%{opacity:0;transform:scale(.9)}18%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.04)}}
+
+  /* ── 操作盤 ── */
+  .panel{flex:none;border-top:1px solid #3A322A;background:#171310;padding:12px 14px calc(14px + env(safe-area-inset-bottom))}
+  .status{
+    display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+    font-size:11.5px;color:#A2988A;margin-bottom:11px;min-height:16px;
+  }
+  .status b{color:var(--paper);font-weight:500;white-space:nowrap}
+  .status .alert{color:#E0A050}
+  .knobs{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-bottom:12px}
+  .knob label{display:block;font-size:11px;color:#A2988A;margin-bottom:3px}
+  .knob .v{color:var(--paper);font-variant-numeric:tabular-nums}
+  input[type=range]{
+    width:100%;-webkit-appearance:none;appearance:none;height:22px;background:transparent;
+  }
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:#4A4238}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:16px;height:16px;margin-top:-7px;border-radius:50%;
+    background:var(--paper);border:3px solid var(--rust);
+  }
+  input[type=range]::-moz-range-track{height:2px;background:#4A4238}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--paper);border:3px solid var(--rust)}
+  .btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  @media (max-width:430px){.btns{grid-template-columns:1fr 1fr}}
+  button{
+    flex:1;font:inherit;font-size:14px;padding:12px 8px;
+    background:transparent;color:var(--paper);
+    border:1px solid #5C5145;border-radius:2px;cursor:pointer;
+    letter-spacing:.12em;
+  }
+  button.go{background:var(--rust);border-color:var(--rust)}
+  button:disabled{opacity:.32;cursor:default}
+  button:focus-visible{outline:2px solid var(--spring);outline-offset:2px}
+  button.pump.on{border-color:var(--water);color:var(--spring)}
+  .hint{margin-top:9px;font-size:10px;color:#7A7164;letter-spacing:.04em;text-align:center}
+  @media (prefers-reduced-motion:reduce){
+    .bitline .bit.spin,.bitline .bit.stuck,.log.quake{animation:none}
+    .flash.on,.shout.on{animation-duration:.01s}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>さく井業BGM生成器</h1>
+  <span class="sub">地層が変われば曲も変わる ── 時間約5,000倍速</span>
+</header>
+
+<div class="log" id="log">
+  <div class="stack" id="stack">
+    <div class="ruler" id="ruler"></div>
+    <div class="strata" id="strata"></div>
+    <div class="hole" id="hole"></div>
+    <div class="casing" id="casing"></div>
+    <div class="fill" id="fill" style="height:0"></div>
+  </div>
+  <div class="bitline" id="bitline">
+    <div class="rule"></div>
+    <div class="rod"></div>
+    <div class="bit" id="bit"></div>
+    <div class="readout"><div class="d" id="depth">0.0</div><div class="u">掘進長 m</div></div>
+  </div>
+  <div class="flash" id="flash"></div>
+  <div class="shout mincho" id="shout">出　水</div>
+</div>
+
+<div class="panel">
+  <div class="status"><span id="msg">ビットは地表。掘削を始めてください。</span><b id="layerName">—</b></div>
+  <div class="knobs">
+    <div class="knob">
+      <label for="rpm">回転数 <span class="v" id="rpmV">90</span> rpm</label>
+      <input type="range" id="rpm" min="40" max="170" value="90">
+    </div>
+    <div class="knob">
+      <label for="mud">送水量 <span class="v" id="mudV">200</span> L/min</label>
+      <input type="range" id="mud" min="0" max="100" value="40">
+    </div>
+  </div>
+  <div class="btns">
+    <button class="go" id="run">掘削開始</button>
+    <button class="pump" id="pump">泥水ポンプ</button>
+    <button id="jar" disabled>ジャーリング</button>
+    <button id="reset">新しい井戸</button>
+  </div>
+  <div class="hint">音が出ないときは端末のマナーモード（サイレントスイッチ）を確認してください</div>
+</div>
+
+<script>
+const PXM = 5;                       // 1m = 5px
+const SURF_CASING = 12;              // 表層ケーシング建て込み深さ m
+const $ = s => document.querySelector(s);
+
+/* ───────── 地層 ───────── */
+function buildStrata(){
+  const aq = 128 + Math.round(Math.random()*46);      // 破砕帯の深さは毎回ちがう
+  const s = [
+    {n:'表土',        to:5,   h:1.0, c:'#6B5136', p:'dot',   root:50, sc:[0,2,4,7,9],   tim:'wood'},
+    {n:'ローム層',     to:19,  h:1.3, c:'#7E4E2C', p:'dot',   root:48, sc:[0,3,5,7,10],  tim:'wood'},
+    {n:'粘土層',       to:36,  h:1.7, c:'#5E6242', p:'line',  root:43, sc:[0,2,3,7,8],   tim:'soft'},
+    {n:'砂れき層',     to:58,  h:2.2, c:'#93794E', p:'grain', root:45, sc:[0,2,5,7,9],   tim:'grit'},
+    {n:'泥岩',        to:84,  h:3.0, c:'#464040', p:'line',  root:41, sc:[0,1,5,6,8],   tim:'soft'},
+    {n:'砂岩',        to:112, h:3.5, c:'#6E6151', p:'grain', root:39, sc:[0,3,5,7,10],  tim:'grit'},
+    {n:'花こう岩',     to:aq,  h:5.2, c:'#37353E', p:'cross', root:36, sc:[0,1,3,6,7],   tim:'hard'},
+    {n:'花こう岩破砕帯', to:aq+70, h:1.5, c:'#2F5D6E', p:'wave', root:52, sc:[0,2,4,7,11], tim:'bell'},
+  ];
+  return {list:s, aq, max:aq+70};
+}
+let G = buildStrata();
+
+const PATTERNS = {
+  dot:  'radial-gradient(rgba(255,240,215,.20) 1px, transparent 1.2px)',
+  line: 'repeating-linear-gradient(180deg,rgba(0,0,0,.28) 0 1px,transparent 1px 9px)',
+  grain:'radial-gradient(rgba(255,245,220,.34) 1.6px, transparent 1.9px)',
+  cross:'repeating-linear-gradient(45deg,rgba(255,255,255,.13) 0 1px,transparent 1px 8px),repeating-linear-gradient(-45deg,rgba(255,255,255,.13) 0 1px,transparent 1px 8px)',
+  wave: 'repeating-linear-gradient(180deg,rgba(180,240,255,.22) 0 2px,transparent 2px 10px)',
+};
+const PSIZE = {dot:'11px 11px',grain:'16px 16px',line:'auto',cross:'auto',wave:'auto'};
+
+function render(){
+  const strata = $('#strata'), ruler = $('#ruler');
+  strata.innerHTML=''; ruler.innerHTML='';
+  let top=0;
+  G.list.forEach(l=>{
+    const d=document.createElement('div');
+    d.className='layer';
+    d.style.height=(l.to-top)*PXM+'px';
+    d.style.background=l.c;
+    d.style.backgroundImage=PATTERNS[l.p];
+    if(PSIZE[l.p]!=='auto') d.style.backgroundSize=PSIZE[l.p];
+    d.innerHTML='<span class="nm">'+l.n+'</span>';
+    strata.appendChild(d);
+    top=l.to;
+  });
+  $('#hole').style.height='0px';
+  $('#casing').style.height='0px';
+  for(let m=0;m<=G.max;m+=5){
+    const t=document.createElement('div');
+    t.className='tick'+(m%20===0?' major':'');
+    t.style.top=m*PXM+'px';
+    if(m%20===0) t.innerHTML='<span>'+m+'</span>';
+    ruler.appendChild(t);
+  }
+}
+function layerAt(d){ return G.list.find(l=>d<l.to) || G.list[G.list.length-1]; }
+
+/* ───────── 状態 ───────── */
+let depth=0, running=false, pumping=false, cur=null, struck=false, done=false, casingFull=false;
+let rpm=90, mud=40;          // mud は内部0-100（表示は5倍してL/min）
+let warnMsg=null;
+let trouble=null, scarCount=0, redrillTo=0, lastTroubleT=-99;
+
+function paint(){
+  const line = $('#log').clientHeight*0.38;
+  $('#stack').style.transform='translateY('+(line-depth*PXM)+'px)';
+  $('#bitline').style.top=line+'px';
+  $('#depth').textContent=depth.toFixed(1);
+  $('#hole').style.height=Math.min(depth,G.max)*PXM+'px';
+  // 掘削中は表層ケーシングのみ。全長ケーシングは完成時に建て込む
+  if(!casingFull) $('#casing').style.height=Math.min(depth,SURF_CASING)*PXM+'px';
+  if(struck){
+    const col=Math.max(0,(G.max-G.aq+40))*PXM;
+    $('#fill').style.height=col+'px';
+    $('#fill').style.bottom=(G.max-Math.min(depth+4,G.max))*PXM+'px';
+  } else { $('#fill').style.height='0px'; }
+}
+
+const LINES = {
+  '表土':'表土を掘り抜いています。まだ音は軽い。',
+  'ローム層':'ローム層。掘進は順調です。',
+  '粘土層':'粘土がビットに付着。音がこもります。',
+  '砂れき層':'砂れき層。浅層の水はケーシングで遮水して掘り進みます。',
+  '泥岩':'泥岩帯。低音が重くなりました。',
+  '砂岩':'砂岩。少し硬くなってきました。',
+  '花こう岩':'岩盤に到達。掘進速度が落ちます。',
+  '花こう岩破砕帯':'破砕帯のなかを掘進中。裂か水が滲みます。',
+};
+
+function setMsg(m,alert){
+  const el=$('#msg');
+  el.textContent=m;
+  el.classList.toggle('alert',!!alert);
+}
+function warn(m){ if(warnMsg!==m){ warnMsg=m; setMsg(m,true); } }
+function clearWarn(){
+  if(warnMsg){ warnMsg=null; const L=layerAt(depth); setMsg(LINES[L.n]||''); }
+}
+
+/* ───────── 音 ───────── */
+let ctx, master, wet, noiseBuf, padA, padB, padG, padF, waterSrc, waterG, waterF;
+let nextT=0, step=0, schedId=null, rafId=null, suspendTO=null;
+
+function makeIR(sec,decay){
+  const n=ctx.sampleRate*sec, b=ctx.createBuffer(2,n,ctx.sampleRate);
+  for(let c=0;c<2;c++){const d=b.getChannelData(c);
+    for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,decay);}
+  return b;
+}
+function initAudio(){
+  if(ctx) return;
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  master=ctx.createGain(); master.gain.value=.85; master.connect(ctx.destination);
+  const conv=ctx.createConvolver(); conv.buffer=makeIR(2.6,2.4);
+  wet=ctx.createGain(); wet.gain.value=.3;
+  master.connect(conv); conv.connect(wet); wet.connect(ctx.destination);
+
+  // 5秒ノイズ：2秒だとループ周期が水音で聞き取れてしまう
+  const n=ctx.sampleRate*5; noiseBuf=ctx.createBuffer(1,n,ctx.sampleRate);
+  const d=noiseBuf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=Math.random()*2-1;
+
+  padG=ctx.createGain(); padG.gain.value=0; padG.connect(master);
+  padA=ctx.createOscillator(); padB=ctx.createOscillator();
+  padA.type='sawtooth'; padB.type='sawtooth';
+  padF=ctx.createBiquadFilter(); padF.type='lowpass'; padF.frequency.value=520; padF.Q.value=3;
+  padA.connect(padF); padB.connect(padF); padF.connect(padG);
+  padA.start(); padB.start();
+
+  waterG=ctx.createGain(); waterG.gain.value=0; waterG.connect(master);
+  waterF=ctx.createBiquadFilter(); waterF.type='bandpass'; waterF.frequency.value=1500; waterF.Q.value=.7;
+  waterF.connect(waterG);
+  waterSrc=ctx.createBufferSource(); waterSrc.buffer=noiseBuf; waterSrc.loop=true;
+  waterSrc.connect(waterF); waterSrc.start();
+}
+const hz = m => 440*Math.pow(2,(m-69)/12);
+
+function tick(t,accent,L){
+  const s=ctx.createBufferSource(); s.buffer=noiseBuf;
+  s.playbackRate.value=.7+L.h*.22;
+  const f=ctx.createBiquadFilter();
+  const base={wood:900,soft:420,grit:1900,hard:3200,bell:1400}[L.tim];
+  f.type=L.tim==='soft'?'lowpass':'bandpass';
+  f.frequency.value=base*(accent?1.3:1); f.Q.value=L.tim==='grit'?1.2:4;
+  const g=ctx.createGain();
+  const v=(accent?.5:.2)*(1-mud/260);
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(v,t+.004);
+  g.gain.exponentialRampToValueAtTime(.0001,t+(L.tim==='hard'?.16:.075));
+  s.connect(f); f.connect(g); g.connect(master);
+  s.start(t); s.stop(t+.3);
+}
+function pluck(t,note,gain,type,dur){
+  const o=ctx.createOscillator(); o.type=type||'triangle'; o.frequency.value=hz(note);
+  const g=ctx.createGain();
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(gain,t+.012);
+  g.gain.exponentialRampToValueAtTime(.0001,t+(dur||.9));
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+(dur||.9)+.1);
+}
+function setPad(L){
+  if(!ctx) return;
+  const t=ctx.currentTime;
+  padA.frequency.setTargetAtTime(hz(L.root-12),t,.4);
+  padB.frequency.setTargetAtTime(hz(L.root-12)*1.005,t,.4);
+  padG.gain.setTargetAtTime(.075,t,.6);
+  padF.frequency.setTargetAtTime(240+(6-L.h)*140,t,.6);
+}
+
+/* トラブル用の音 */
+function clank(t,strong){          // ジャーリングの金属打撃
+  const s=ctx.createBufferSource(); s.buffer=noiseBuf; s.playbackRate.value=1.8;
+  const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=strong?520:700; f.Q.value=9;
+  const g=ctx.createGain(); g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(strong?.55:.35,t+.003);
+  g.gain.exponentialRampToValueAtTime(.0001,t+.5);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+.6);
+  pluck(t,strong?31:38,.12,'square',.4);
+}
+function pop(t){                   // ビットが抜けた
+  const o=ctx.createOscillator(); o.type='sine';
+  o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(900,t+.18);
+  const g=ctx.createGain(); g.gain.setValueAtTime(.001,t);
+  g.gain.exponentialRampToValueAtTime(.5,t+.04); g.gain.exponentialRampToValueAtTime(.0001,t+.35);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+.4);
+}
+function groan(t){                 // 地層がビットを噛む唸り
+  const o=ctx.createOscillator(); o.type='sawtooth';
+  o.frequency.setValueAtTime(55,t); o.frequency.linearRampToValueAtTime(38,t+.5);
+  const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=300;
+  const g=ctx.createGain(); g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(.22,t+.05); g.gain.exponentialRampToValueAtTime(.0001,t+.7);
+  o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t+.8);
+}
+function rumble(t){                // 孔壁崩壊
+  const s=ctx.createBufferSource(); s.buffer=noiseBuf; s.playbackRate.value=.35;
+  const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=140;
+  const g=ctx.createGain(); g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(.6,t+.06); g.gain.exponentialRampToValueAtTime(.0001,t+1.8);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+2);
+}
+
+/* ───────── トラブル：眺める地獄 ─────────
+   操作は予防（ポンプ・送水量）のみ。発生後の対処はすべて自動で進む。
+   ジャーリングボタンは押すと復旧が早まり成功率も少し上がる、おまけ */
+function riskP(L){
+  const layerF={'粘土層':1.6,'砂れき層':1.9,'花こう岩':1.2,'花こう岩破砕帯':1.6}[L.n]||1;
+  const mudF=Math.max(.5,1.25-mud/160);          // 送水量が多いほど孔内は安定
+  return 0.00045*(0.25+(depth/G.max)*1.75)*layerF*mudF;   // 深いほど危ない
+}
+function enterTrouble(t,L){
+  lastTroubleT=t;
+  const collapseProne=(L.n==='砂れき層'||L.n==='花こう岩破砕帯');
+  if(Math.random()<(collapseProne?.55:.3)){
+    const back=4+Math.random()*8;
+    redrillTo=Math.max(redrillTo,depth);
+    depth=Math.max(8,depth-back);
+    trouble={phase:'collapse',untilT:t+2.0,bonus:0};
+    rumble(t);
+    const log=$('#log'); log.classList.remove('quake'); void log.offsetWidth; log.classList.add('quake');
+    setMsg('孔壁が崩壊。約'+Math.round(back)+'mぶん埋まりました。',true);
+  }else{
+    trouble={phase:'seize',untilT:t+2.2,bonus:0,kick:Math.max(8,depth-(6+Math.random()*6))};
+    groan(t);
+    setMsg('ビットが地層に喰われました。回転が止まっています。',true);
+    if(cur){ padA.frequency.setTargetAtTime(hz(cur.root-26),t,.3);
+      padB.frequency.setTargetAtTime(hz(cur.root-26)*1.01,t,.3);
+      padF.frequency.setTargetAtTime(150,t,.4); }
+    $('#bit').classList.add('stuck');
+  }
+  $('#bit').classList.remove('spin');
+}
+function troubleStep(t){
+  if(trouble.phase==='seize'){
+    if(step%4===0) groan(t);
+    if(step%2===0) tick(t,false,{h:4.5,tim:'soft'});
+  }else if(trouble.phase==='jar'){
+    if(step%4===0) clank(t,step%8===0);
+  }else if(trouble.phase==='cement'){
+    if(step%8===0) tick(t,false,{h:2,tim:'soft'});
+  }
+}
+function advanceTrouble(t){
+  if(trouble.phase==='seize'){
+    trouble.phase='jar'; trouble.untilT=t+5;
+    $('#jar').disabled=false;
+    setMsg('ジャーリング中。打撃でビットを抜こうとしています。',true);
+  }else if(trouble.phase==='jar'){
+    $('#jar').disabled=true;
+    if(Math.random()<.62+trouble.bonus){
+      pop(t);
+      endTrouble('抜けました。ビットは無事です。掘進を再開します。');
+    }else{
+      trouble.phase='cement'; trouble.untilT=t+2.6;
+      [40,43,46].forEach((n,i)=>pluck(t+i*.15,n,.14,'sine',2.4));
+      setMsg('ビット回収不能。孔をセメントで埋め、少し上から掘り直します。',true);
+    }
+  }else if(trouble.phase==='cement'){
+    drawScar(trouble.kick,depth,scarCount); scarCount++;
+    depth=trouble.kick;
+    endTrouble('新しいビットで掘り直し。古い孔とビットは地中に残ります。');
+  }else if(trouble.phase==='collapse'){
+    endTrouble('崩れた区間を掘り直しています。');
+  }
+}
+function endTrouble(m){
+  trouble=null;
+  const L=layerAt(depth);
+  cur=L; setPad(L); $('#layerName').textContent=L.n;
+  $('#jar').disabled=true;
+  $('#bit').classList.remove('stuck');
+  if(running) $('#bit').classList.add('spin');
+  setMsg(m);
+}
+function drawScar(top,bottom,idx){
+  const e=document.createElement('div');
+  e.className='scar';
+  e.style.top=top*PXM+'px';
+  e.style.height=Math.max(10,(bottom-top)*PXM)+'px';
+  e.style.left='calc(46px + 34% - '+(18+idx*11)+'px)';
+  e.innerHTML='<div class="cement"></div><div class="lostbit"></div>';
+  $('#stack').appendChild(e);
+}
+
+/* ───────── スケジューラ ─────────
+   setInterval 駆動（rAF はタブ非表示で止まるため描画専用に分離）。
+   非表示タブでは interval が~1sに絞られるので先読みを広げる */
+function lookahead(){ return document.hidden ? 1.4 : 0.16; }
+
+function schedule(){
+  if(!running) return;
+  // 復帰クランプ：停止中に進んだ ctx 時計へ追いつこうとして
+  // 溜まったノートを一斉スケジュールするのを防ぐ
+  if(ctx.currentTime-nextT > 0.25) nextT = ctx.currentTime + 0.05;
+
+  const spb=60/(rpm*1.05)/4;                 // 16分音符
+  while(nextT < ctx.currentTime+lookahead()){
+    const L=layerAt(depth);
+    if(L!==cur && !trouble){
+      cur=L; setPad(L); $('#layerName').textContent=L.n;
+      if(!warnMsg) setMsg(LINES[L.n]);
+    }
+
+    if(trouble){
+      // トラブル中は通常の曲を止め、トラブル自身の音が鳴る。復旧は全自動
+      troubleStep(nextT);
+      if(nextT>=trouble.untilT) advanceTrouble(nextT);
+    } else {
+      tick(nextT,step%4===0,L);
+
+      if(step%8===0){
+        const n=L.root-12+L.sc[(step/8|0)%L.sc.length];
+        pluck(nextT,n,.10,'sine',1.6);
+      }
+      const pat=[0,3,6,10,12];
+      if(pat.includes(step%16) && Math.random()<.78){
+        const n=L.root+L.sc[Math.floor(Math.random()*L.sc.length)]+(Math.random()<.3?12:0);
+        pluck(nextT,n,L.tim==='bell'?.16:.11,L.tim==='bell'?'sine':'triangle',L.tim==='bell'?2.2:.7);
+      }
+      if(L.tim==='hard' && Math.random()<.035) pluck(nextT,L.root+24,.09,'square',.3);
+
+      // 掘進：泥水循環がないと孔壁が保てない。砂れき層は送水不足で逸泥
+      if(!done){
+        let adv=.30/L.h;
+        if(depth>4 && !pumping){
+          adv=0;
+          warn('泥水ポンプが停止中。循環なしでは孔壁が保てません。');
+        } else if(L.n==='砂れき層' && mud<45){
+          adv*=.25;
+          warn('砂れき層で逸泥。送水量を上げてください。');
+        } else clearWarn();
+        if(depth<redrillTo) adv*=2.2;          // 崩壊した区間の埋め戻しは掘り直しが速い
+        depth+=adv;
+        if(adv>0 && depth>12 && nextT-lastTroubleT>18 && Math.random()<riskP(L)) enterTrouble(nextT,L);
+        if(!struck && depth>=G.aq) strike();
+        if(depth>=G.max){ depth=G.max; finish(); }
+      }
+    }
+    nextT+=spb; step=(step+1)%64;
+  }
+}
+
+/* ───────── イベント ───────── */
+function strike(){
+  struck=true; warnMsg=null;
+  $('#flash').classList.remove('on'); void $('#flash').offsetWidth; $('#flash').classList.add('on');
+  $('#shout').classList.remove('on'); void $('#shout').offsetWidth; $('#shout').classList.add('on');
+  setMsg('破砕帯の裂か水に到達。地下水が上がってきました。');
+  cur=layerAt(depth); $('#layerName').textContent=cur.n;   // 直後の層変化メッセージに上書きさせない
+  if(!ctx) return;
+  setPad(cur);
+  const t=ctx.currentTime;
+  const s=ctx.createBufferSource(); s.buffer=noiseBuf;
+  const f=ctx.createBiquadFilter(); f.type='bandpass'; f.Q.value=1.2;
+  f.frequency.setValueAtTime(280,t); f.frequency.exponentialRampToValueAtTime(4800,t+1.4);
+  const g=ctx.createGain();
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.4,t+.15);
+  g.gain.exponentialRampToValueAtTime(.0001,t+2.6);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+3);
+  [64,68,71,76,83].forEach((n,i)=>pluck(t+i*.09,n,.17,'sine',3.2));
+}
+function finish(){
+  done=true; running=false; stopLoop(6000);
+  $('#run').textContent='掘削開始'; $('#run').disabled=true;
+  $('#bit').classList.remove('spin');
+  setMsg('所定深度に到達。ケーシングとストレーナーを建て込み、井戸は完成です。'
+    +(scarCount?'（地中に残したビット：'+scarCount+'本）':''));
+  // 全長ケーシング建て込み演出
+  casingFull=true;
+  const c=$('#casing');
+  c.style.transition='height 2.6s ease';
+  c.style.height=G.max*PXM+'px';
+  if(ctx){ padG.gain.setTargetAtTime(0,ctx.currentTime,.9);
+    [52,59,64,71].forEach((n,i)=>pluck(ctx.currentTime+i*.12,n,.16,'sine',3.4)); }
+}
+function draw(){ if(!running) return; paint(); rafId=requestAnimationFrame(draw); }
+function startLoop(){
+  clearInterval(schedId);
+  schedId=setInterval(schedule,25);
+  schedule(); draw();
+}
+function stopLoop(suspendDelay){
+  clearInterval(schedId); cancelAnimationFrame(rafId);
+  if(ctx){ padG.gain.setTargetAtTime(0,ctx.currentTime,.25); waterG.gain.setTargetAtTime(0,ctx.currentTime,.3);
+    // 残響が消えたらコンテキストごと停止（停止中のDSP空回り＝電池対策）
+    clearTimeout(suspendTO);
+    suspendTO=setTimeout(()=>{ if(ctx && !running) ctx.suspend(); }, suspendDelay||1500);
+  }
+  paint();
+}
+
+$('#run').onclick=()=>{
+  initAudio(); clearTimeout(suspendTO); ctx.resume();
+  running=!running;
+  $('#run').textContent = running?'掘削停止':'掘削再開';
+  $('#bit').classList.toggle('spin',running&&!trouble);
+  $('#bit').classList.toggle('stuck',running&&!!trouble&&trouble.phase!=='collapse');
+  if(running){ nextT=ctx.currentTime+.06; cur=null; warnMsg=null;
+    if(pumping) waterG.gain.setTargetAtTime(mud/1400,ctx.currentTime,.4);
+    startLoop();
+  } else { stopLoop(); warnMsg=null; setMsg('ビットを止めています。'); }
+};
+$('#pump').onclick=()=>{
+  initAudio();
+  pumping=!pumping;
+  $('#pump').classList.toggle('on',pumping);
+  if(running){ ctx.resume();
+    waterG.gain.setTargetAtTime(pumping?mud/1400:0,ctx.currentTime,.4); }
+};
+$('#jar').onclick=()=>{
+  if(!ctx || !trouble || trouble.phase!=='jar') return;
+  const t=ctx.currentTime;
+  clank(t,true);
+  trouble.untilT=Math.max(t+.6,trouble.untilT-.5);      // 早く抜ける
+  trouble.bonus=Math.min(.25,trouble.bonus+.04);        // 成功率も少し上がる
+};
+$('#reset').onclick=()=>{
+  running=false; stopLoop(); depth=0; struck=false; done=false; cur=null; step=0;
+  warnMsg=null; casingFull=false;
+  trouble=null; scarCount=0; redrillTo=0; lastTroubleT=-99;
+  document.querySelectorAll('.scar').forEach(e=>e.remove());
+  $('#jar').disabled=true;
+  $('#bit').classList.remove('stuck');
+  const c=$('#casing'); c.style.transition='none'; c.style.height='0px';
+  G=buildStrata(); render(); paint();
+  $('#run').textContent='掘削開始'; $('#run').disabled=false;
+  $('#bit').classList.remove('spin');
+  $('#layerName').textContent='—';
+  setMsg('新しい地点です。水脈の深さは掘ってみるまで分かりません。');
+};
+$('#rpm').oninput=e=>{ rpm=+e.target.value; $('#rpmV').textContent=rpm; };
+$('#mud').oninput=e=>{ mud=+e.target.value; $('#mudV').textContent=mud*5;
+  if(ctx&&pumping&&running) waterG.gain.setTargetAtTime(mud/1400,ctx.currentTime,.2);
+  if(ctx) wet.gain.setTargetAtTime(.18+mud/320,ctx.currentTime,.3); };
+addEventListener('resize',paint);
+
+// 電話・Siri割り込み後は interrupted のまま自動復帰しないことがある
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden && running && ctx) ctx.resume();
+});
+
+render(); paint();
+</script>
+</body>
+</html>
