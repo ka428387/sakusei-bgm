@@ -1,0 +1,22 @@
+{
+  "name": "さく井業BGM生成器",
+  "short_name": "さく井業BGM",
+  "description": "井戸を掘ると、地層が音楽になる。ロータリー式とパーカッション式、2つの掘り方で井戸を掘るBGM生成器。",
+  "lang": "ja",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1C1713",
+  "theme_color": "#1C1713",
+  "icons": [
+    { "src": "icons/top-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/top-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/top-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "ロータリー編", "url": "rotary/", "icons": [{ "src": "icons/rotary-192.png", "sizes": "192x192" }] },
+    { "name": "パーカッション編", "url": "percussion/", "icons": [{ "src": "icons/percussion-192.png", "sizes": "192x192" }] }
+  ]
+}

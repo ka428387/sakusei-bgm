@@ -1,0 +1,17 @@
+{
+  "name": "さく井業BGM生成器 ロータリー編",
+  "short_name": "ロータリー編",
+  "description": "ビットを回して削るロータリー式のさく井シミュレーター。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "../",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1C1713",
+  "theme_color": "#1C1713",
+  "icons": [
+    { "src": "../icons/rotary-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "../icons/rotary-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "../icons/rotary-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

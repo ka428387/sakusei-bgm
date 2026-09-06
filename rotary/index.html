@@ -6,6 +6,12 @@
 <title>さく井業BGM生成器 ロータリー編</title>
 <meta name="description" content="井戸を掘ると、地層が音楽になる。ブラウザだけで動くさく井（井戸掘り）シミュレーター。粘土はこもり、砂れきはざらつき、破砕帯は鳴る。">
 <meta name="theme-color" content="#1C1713">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../icons/rotary-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="ロータリー編">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231C1713'/%3E%3Crect x='14' y='3' width='4' height='16' fill='%23B6A88E'/%3E%3Cpath d='M11 17h10v6l-5 6-5-6z' fill='%23C9BCA6'/%3E%3C/svg%3E">
 
 <meta property="og:type" content="website">
@@ -671,6 +677,12 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 render(); paint();
+</script>
+<script>
+/* オフラインとホーム画面起動のための Service Worker */
+if ('serviceWorker' in navigator) {
+  addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
+}
 </script>
 </body>
 </html>

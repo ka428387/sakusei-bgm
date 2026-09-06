@@ -47,12 +47,26 @@
 - 地層はロード毎に生成されるので、毎回ちがう井戸になります
 - `prefers-reduced-motion` に対応
 
+## アプリとして入れる
+
+PWA なので、ホーム画面に置いてアプリのように起動できます。オフラインでも動きます。
+
+- **iPhone / iPad** — Safari で開き、共有ボタンから「ホーム画面に追加」
+- **Android** — Chrome のメニューから「アプリをインストール」
+- **パソコン** — Chrome / Edge のアドレスバー右のインストールアイコン
+
+トップ・ロータリー編・パーカッション編それぞれにマニフェストを置いてあるので、
+遊びたい工法のページから追加すれば、そのページが直接起動するアイコンになります。
+
 ## 構成
 
 ```
-index.html            入口（工法を選ぶ）
-rotary/index.html     ロータリー編
-percussion/index.html パーカッション編
+index.html             入口（工法を選ぶ）
+rotary/index.html      ロータリー編
+percussion/index.html  パーカッション編
+sw.js                  オフライン用 Service Worker
+manifest.webmanifest   PWA マニフェスト（各ページにも1つずつ）
+icons/                 ホーム画面アイコン
 ```
 
 ## 動作環境
