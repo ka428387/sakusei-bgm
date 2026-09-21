@@ -1,7 +1,7 @@
 /* さく井業BGM生成器 Service Worker
    静的ファイルだけの構成なので、初回に全部キャッシュしてオフラインで動くようにする。
    取り出しは cache-first、裏で取り直して次回起動時に新しくなる（stale-while-revalidate）。 */
-const CACHE = 'sakusei-bgm-v1';
+const CACHE = 'sakusei-bgm-v2';
 
 const ASSETS = [
   './',

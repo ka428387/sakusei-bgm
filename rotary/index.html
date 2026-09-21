@@ -54,7 +54,7 @@
 
   header{
     padding:14px 16px 10px;
-    display:flex;align-items:baseline;gap:10px;
+    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
     border-bottom:1px solid #3A322A;
     flex:none;
   }
@@ -63,6 +63,13 @@
     font-size:17px;font-weight:600;letter-spacing:.14em;
   }
   header .sub{font-size:10.5px;color:#8A8073;letter-spacing:.05em}
+  .home{
+    flex:none;align-self:center;
+    font-size:11.5px;letter-spacing:.08em;text-decoration:none;white-space:nowrap;
+    color:#C3B8A6;border:1px solid #4A4238;border-radius:2px;padding:6px 10px;
+  }
+  .home:hover{border-color:#7A6E5E;color:var(--paper)}
+  .home:focus-visible{outline:2px solid var(--spring);outline-offset:2px}
 
   /* ── 柱状図 ── */
   .log{
@@ -86,23 +93,25 @@
     color:rgba(255,250,240,.86);
     text-shadow:0 1px 3px rgba(0,0,0,.55);
   }
-  /* 掘削孔（depth追従） */
+  /* 掘削孔（depth追従）。--hx は現在の井戸の横位置で、孔を放棄するたび右へずれる */
   .hole{
-    position:absolute;top:0;width:26px;left:calc(46px + 34%);
-    background:#0A0908;
+    position:absolute;top:0;width:26px;left:calc(46px + 34% + var(--hx,0px));
+    background:#0A0908;transition:left .9s ease;
     box-shadow:inset 2px 0 0 rgba(0,0,0,.6), inset -2px 0 0 rgba(0,0,0,.6);
   }
-  .casing{position:absolute;width:34px;left:calc(46px + 34% - 4px);top:0;
+  .casing{position:absolute;width:34px;left:calc(46px + 34% - 4px + var(--hx,0px));top:0;
+    transition:left .9s ease;
     background:repeating-linear-gradient(180deg,rgba(190,180,160,.30) 0 3px,transparent 3px 11px);
     border-left:1px solid rgba(200,190,170,.45);border-right:1px solid rgba(200,190,170,.45)}
-  .fill{position:absolute;width:26px;left:calc(46px + 34%);bottom:0;
+  .fill{position:absolute;width:26px;left:calc(46px + 34% + var(--hx,0px));transition:left .9s ease;
     background:linear-gradient(180deg,rgba(105,198,222,.85),rgba(31,110,140,.95));}
 
   /* 掘進線 */
   .bitline{position:absolute;left:0;right:0;pointer-events:none}
   .bitline .rule{position:absolute;left:46px;right:0;height:1px;background:rgba(255,140,60,.5)}
   .bitline .bit{
-    position:absolute;left:calc(46px + 34% + 1px);width:22px;height:26px;top:-13px;
+    position:absolute;left:calc(46px + 34% + 1px + var(--hx,0px));width:22px;height:26px;top:-13px;
+    transition:left .9s ease;
     background:linear-gradient(180deg,#C9BCA6,#7C6E5C);
     clip-path:polygon(0 0,100% 0,100% 55%,50% 100%,0 55%);
   }
@@ -120,9 +129,23 @@
     clip-path:polygon(0 0,100% 0,100% 55%,50% 100%,0 55%)}
   .log.quake{animation:quake .5s linear}
   @keyframes quake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+
+  /* ジャーリングの手元表示 */
+  .jarui{
+    position:absolute;left:50%;transform:translateX(-50%);bottom:14px;
+    width:min(380px,86%);padding:9px 14px;pointer-events:none;display:none;
+    background:rgba(18,14,11,.88);border:1px solid #7A4A2A;border-radius:3px;text-align:center;
+  }
+  .jarui.on{display:block}
+  .jarui .t{font-size:11.5px;color:#E0A050;letter-spacing:.06em;margin-bottom:7px;
+    text-wrap:balance;line-height:1.6}
+  .jarui .t b{color:#FFD9A0;font-weight:500;font-variant-numeric:tabular-nums}
+  .jarui .bar{height:6px;background:#2A241E;border-radius:3px;overflow:hidden}
+  .jarui .bar i{display:block;height:100%;width:0;border-radius:3px;transition:width .12s;
+    background:linear-gradient(90deg,#9C4A22,#E0A050)}
   .bitline .rod{
-    position:absolute;left:calc(46px + 34% + 8px);width:8px;top:-2000px;height:2000px;
-    background:linear-gradient(90deg,#4A4238,#B6A88E,#4A4238);
+    position:absolute;left:calc(46px + 34% + 8px + var(--hx,0px));width:8px;top:-2000px;height:2000px;
+    background:linear-gradient(90deg,#4A4238,#B6A88E,#4A4238);transition:left .9s ease;
   }
   .readout{
     position:absolute;right:12px;text-align:right;top:-42px;
@@ -182,9 +205,11 @@
   button:disabled{opacity:.32;cursor:default}
   button:focus-visible{outline:2px solid var(--spring);outline-offset:2px}
   button.pump.on{border-color:var(--water);color:var(--spring)}
+  button.urgent{border-color:#E0A050;color:#FFD9A0;animation:urge .62s ease-in-out infinite}
+  @keyframes urge{0%,100%{box-shadow:0 0 0 0 rgba(224,160,80,.5)}50%{box-shadow:0 0 0 6px rgba(224,160,80,0)}}
   .hint{margin-top:9px;font-size:10px;color:#7A7164;letter-spacing:.04em;text-align:center}
   @media (prefers-reduced-motion:reduce){
-    .bitline .bit.spin,.bitline .bit.stuck,.log.quake{animation:none}
+    .bitline .bit.spin,.bitline .bit.stuck,.log.quake,button.urgent{animation:none}
     .flash.on,.shout.on{animation-duration:.01s}
   }
 </style>
@@ -192,8 +217,9 @@
 <body>
 
 <header>
+  <a class="home" href="../" aria-label="ホーム（工法の選択）にもどる">← ホーム</a>
   <h1>さく井業BGM生成器</h1>
-  <span class="sub">地層が変われば曲も変わる ── 時間約5,000倍速</span>
+  <span class="sub">ロータリー式 ── 地層が変われば曲も変わる（時間約5,000倍速）</span>
 </header>
 
 <div class="log" id="log">
@@ -212,6 +238,10 @@
   </div>
   <div class="flash" id="flash"></div>
   <div class="shout mincho" id="shout">出　水</div>
+  <div class="jarui" id="jarui">
+    <div class="t">ビットが喰われました ── ジャーリングで抜いてください</div>
+    <div class="bar"><i id="jarfill"></i></div>
+  </div>
 </div>
 
 <div class="panel">
@@ -253,7 +283,7 @@ function buildStrata(){
     {n:'花こう岩',     to:aq,  h:5.2, c:'#37353E', p:'cross', root:36, sc:[0,1,3,6,7],   tim:'hard'},
     {n:'花こう岩破砕帯', to:aq+70, h:1.5, c:'#2F5D6E', p:'wave', root:52, sc:[0,2,4,7,11], tim:'bell'},
   ];
-  return {list:s, aq, max:aq+70};
+  return {list:s, aq, max:aq+70, swl:8+Math.random()*22};   // 被圧水がどこまで上がるか
 }
 let G = buildStrata();
 
@@ -297,9 +327,14 @@ function layerAt(d){ return G.list.find(l=>d<l.to) || G.list[G.list.length-1]; }
 let depth=0, running=false, pumping=false, cur=null, struck=false, done=false, casingFull=false;
 let rpm=90, mud=40;          // mud は内部0-100（表示は5倍してL/min）
 let warnMsg=null;
-let trouble=null, scarCount=0, redrillTo=0, lastTroubleT=-99;
+let trouble=null, scarCount=0, redrillTo=0, knownTo=0, lastTroubleT=-99;
+let holeX=0, finishAt=0, waterLvl=0, lastPT=0;
+function applyHoleX(){ $('#log').style.setProperty('--hx',holeX+'px'); }
 
 function paint(){
+  const nowMs=performance.now();
+  const dt=lastPT?Math.min(.1,(nowMs-lastPT)/1000):.016;   // フレームレート非依存の補間
+  lastPT=nowMs;
   const line = $('#log').clientHeight*0.38;
   $('#stack').style.transform='translateY('+(line-depth*PXM)+'px)';
   $('#bitline').style.top=line+'px';
@@ -308,10 +343,12 @@ function paint(){
   // 掘削中は表層ケーシングのみ。全長ケーシングは完成時に建て込む
   if(!casingFull) $('#casing').style.height=Math.min(depth,SURF_CASING)*PXM+'px';
   if(struck){
-    const col=Math.max(0,(G.max-G.aq+40))*PXM;
-    $('#fill').style.height=col+'px';
-    $('#fill').style.bottom=(G.max-Math.min(depth+4,G.max))*PXM+'px';
+    waterLvl+=(G.swl-waterLvl)*Math.min(1,dt*1.2);         // 水位がゆっくり上がってくる
+    $('#fill').style.top=waterLvl*PXM+'px';
+    $('#fill').style.height=Math.max(0,(depth-waterLvl)*PXM)+'px';
   } else { $('#fill').style.height='0px'; }
+  if(trouble&&trouble.phase==='jar')
+    $('#jarfill').style.width=Math.min(100,trouble.prog/trouble.need*100)+'%';
 }
 
 const LINES = {
@@ -429,6 +466,18 @@ function groan(t){                 // 地層がビットを噛む唸り
   g.gain.linearRampToValueAtTime(.22,t+.05); g.gain.exponentialRampToValueAtTime(.0001,t+.7);
   o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t+.8);
 }
+function snap(t){                  // ワイヤーが切れる
+  const s=ctx.createBufferSource(); s.buffer=noiseBuf; s.playbackRate.value=2.4;
+  const f=ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=1800;
+  const g=ctx.createGain(); g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(.6,t+.002); g.gain.exponentialRampToValueAtTime(.0001,t+.25);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+.3);
+  const o=ctx.createOscillator(); o.type='triangle';   // 落ちていく工具
+  o.frequency.setValueAtTime(880,t+.02); o.frequency.exponentialRampToValueAtTime(70,t+.9);
+  const g2=ctx.createGain(); g2.gain.setValueAtTime(0,t+.02);
+  g2.gain.linearRampToValueAtTime(.22,t+.06); g2.gain.exponentialRampToValueAtTime(.0001,t+1);
+  o.connect(g2); g2.connect(master); o.start(t+.02); o.stop(t+1.1);
+}
 function rumble(t){                // 孔壁崩壊
   const s=ctx.createBufferSource(); s.buffer=noiseBuf; s.playbackRate.value=.35;
   const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=140;
@@ -437,9 +486,12 @@ function rumble(t){                // 孔壁崩壊
   s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+2);
 }
 
-/* ───────── トラブル：眺める地獄 ─────────
-   操作は予防（ポンプ・送水量）のみ。発生後の対処はすべて自動で進む。
-   ジャーリングボタンは押すと復旧が早まり成功率も少し上がる、おまけ */
+/* ───────── トラブル ─────────
+   予防は泥水ポンプと送水量。孔壁の崩壊は眺めるしかないが、ビットが喰われたときは手で戦う。
+   時間制限はない。気づくまで唸りが鳴り続け、ジャーリングで抜くまで掘進は止まったまま。
+   ただし叩くほどワイヤーに無理がかかり、切れればビットごと孔を失う */
+const JAR_SAFE = 2;                        // 最初のこの回数は必ず無事
+const JAR_PART = .035;                     // 1打ごとにワイヤーが切れる確率
 function riskP(L){
   const layerF={'粘土層':1.6,'砂れき層':1.9,'花こう岩':1.2,'花こう岩破砕帯':1.6}[L.n]||1;
   const mudF=Math.max(.5,1.25-mud/160);          // 送水量が多いほど孔内は安定
@@ -452,12 +504,12 @@ function enterTrouble(t,L){
     const back=4+Math.random()*8;
     redrillTo=Math.max(redrillTo,depth);
     depth=Math.max(8,depth-back);
-    trouble={phase:'collapse',untilT:t+2.0,bonus:0};
+    trouble={phase:'collapse',untilT:t+2.0};
     rumble(t);
     const log=$('#log'); log.classList.remove('quake'); void log.offsetWidth; log.classList.add('quake');
     setMsg('孔壁が崩壊。約'+Math.round(back)+'mぶん埋まりました。',true);
   }else{
-    trouble={phase:'seize',untilT:t+2.2,bonus:0,kick:Math.max(8,depth-(6+Math.random()*6))};
+    trouble={phase:'seize',untilT:t+2.2,prog:0,need:Math.round(4+depth/30)};
     groan(t);
     setMsg('ビットが地層に喰われました。回転が止まっています。',true);
     if(cur){ padA.frequency.setTargetAtTime(hz(cur.root-26),t,.3);
@@ -472,49 +524,73 @@ function troubleStep(t){
     if(step%4===0) groan(t);
     if(step%2===0) tick(t,false,{h:4.5,tim:'soft'});
   }else if(trouble.phase==='jar'){
-    if(step%4===0) clank(t,step%8===0);
-  }else if(trouble.phase==='cement'){
+    // 喰われたまま。手が入るまで、この音が鳴り続ける
+    if(step%8===0) groan(t);
+    if(step%4===0) tick(t,false,{h:4.5,tim:'soft'});   // 打撃は手が押したときだけ鳴る
+  }else if(trouble.phase==='abandon'){
     if(step%8===0) tick(t,false,{h:2,tim:'soft'});
   }
 }
 function advanceTrouble(t){
   if(trouble.phase==='seize'){
-    trouble.phase='jar'; trouble.untilT=t+5;
-    $('#jar').disabled=false;
-    setMsg('ジャーリング中。打撃でビットを抜こうとしています。',true);
-  }else if(trouble.phase==='jar'){
-    $('#jar').disabled=true;
-    if(Math.random()<.62+trouble.bonus){
-      pop(t);
-      endTrouble('抜けました。ビットは無事です。掘進を再開します。');
-    }else{
-      trouble.phase='cement'; trouble.untilT=t+2.6;
-      [40,43,46].forEach((n,i)=>pluck(t+i*.15,n,.14,'sine',2.4));
-      setMsg('ビット回収不能。孔をセメントで埋め、少し上から掘り直します。',true);
-    }
-  }else if(trouble.phase==='cement'){
-    drawScar(trouble.kick,depth,scarCount); scarCount++;
-    depth=trouble.kick;
-    endTrouble('新しいビットで掘り直し。古い孔とビットは地中に残ります。');
+    trouble.phase='jar'; trouble.untilT=Infinity;   // 待つ。時間では負けない
+    $('#jar').disabled=false; $('#jar').classList.add('urgent');
+    $('#jarui').classList.add('on');
+    setMsg('ビットが喰われています。ジャーリングのボタンで抜いてください。',true);
+  }else if(trouble.phase==='abandon'){
+    abandonWell(t);
   }else if(trouble.phase==='collapse'){
     endTrouble('崩れた区間を掘り直しています。');
   }
+}
+function closeJarUI(){
+  $('#jar').disabled=true; $('#jar').classList.remove('urgent');
+  $('#jarui').classList.remove('on');
+}
+/* ジャーリングボタン：一打ごとに抜ける見込みが上がるが、ワイヤーも傷む */
+function jab(){
+  if(!ctx||!trouble||trouble.phase!=='jar') return;
+  if(!running){ setMsg('掘削を再開してからジャーリングしてください。',true); return; }
+  const t=ctx.currentTime;
+  clank(t,true);
+  trouble.prog++;
+  if(trouble.prog>=trouble.need){
+    pop(t+.04);
+    endTrouble('抜けました。ビットは無事です。掘進を再開します。');
+  }else if(trouble.prog>JAR_SAFE && Math.random()<JAR_PART){
+    snap(t+.06);
+    closeJarUI();
+    trouble.phase='abandon'; trouble.untilT=t+3.4;
+    [40,43,46].forEach((n,i)=>pluck(t+.4+i*.18,n,.14,'sine',2.6));
+    setMsg('ワイヤーが切れました。ビットは孔底に落ちたままです。',true);
+  }
+}
+/* 孔もビットも地中に置いて、横に寄って新しい井戸を掘り直す */
+function abandonWell(t){
+  const lost=depth;
+  drawScar(0,lost,holeX); scarCount++;
+  holeX+=30; applyHoleX();
+  depth=0; redrillTo=0; knownTo=lost;        // 地層は分かっているので手は早い
+  casingFull=false;
+  const c=$('#casing'); c.style.transition='left .9s ease'; c.style.height='0px';
+  [33,40,45].forEach((n,i)=>pluck(t+i*.22,n,.12,'sine',2.8));
+  endTrouble('約5m横へ移って、新しい井戸を掘り直します。'+lost.toFixed(1)+'mは置いてきました。');
 }
 function endTrouble(m){
   trouble=null;
   const L=layerAt(depth);
   cur=L; setPad(L); $('#layerName').textContent=L.n;
-  $('#jar').disabled=true;
+  closeJarUI();
   $('#bit').classList.remove('stuck');
   if(running) $('#bit').classList.add('spin');
   setMsg(m);
 }
-function drawScar(top,bottom,idx){
+function drawScar(top,bottom,x){
   const e=document.createElement('div');
   e.className='scar';
   e.style.top=top*PXM+'px';
   e.style.height=Math.max(10,(bottom-top)*PXM)+'px';
-  e.style.left='calc(46px + 34% - '+(18+idx*11)+'px)';
+  e.style.left='calc(46px + 34% + '+(x+6)+'px)';   // 放棄した位置に置いたまま
   e.innerHTML='<div class="cement"></div><div class="lostbit"></div>';
   $('#stack').appendChild(e);
 }
@@ -567,10 +643,13 @@ function schedule(){
           warn('砂れき層で逸泥。送水量を上げてください。');
         } else clearWarn();
         if(depth<redrillTo) adv*=2.2;          // 崩壊した区間の埋め戻しは掘り直しが速い
+        else if(depth<knownTo) adv*=1.5;       // 一度掘った地層は勝手が分かる
         depth+=adv;
         if(adv>0 && depth>12 && nextT-lastTroubleT>18 && Math.random()<riskP(L)) enterTrouble(nextT,L);
-        if(!struck && depth>=G.aq) strike();
-        if(depth>=G.max){ depth=G.max; finish(); }
+        if(!trouble){
+          if(!struck && depth>=G.aq) strike();
+          if(finishAt && depth>=finishAt){ depth=finishAt; finish(); }
+        }
       }
     }
     nextT+=spb; step=(step+1)%64;
@@ -579,10 +658,11 @@ function schedule(){
 
 /* ───────── イベント ───────── */
 function strike(){
-  struck=true; warnMsg=null;
+  struck=true; warnMsg=null; waterLvl=depth;
+  finishAt=Math.min(G.max,depth+4);          // ストレーナーぶんだけ掘り下げて止める
   $('#flash').classList.remove('on'); void $('#flash').offsetWidth; $('#flash').classList.add('on');
   $('#shout').classList.remove('on'); void $('#shout').offsetWidth; $('#shout').classList.add('on');
-  setMsg('破砕帯の裂か水に到達。地下水が上がってきました。');
+  setMsg('破砕帯の裂か水に到達。出水です。ストレーナー区間まで掘り下げます。');
   cur=layerAt(depth); $('#layerName').textContent=cur.n;   // 直後の層変化メッセージに上書きさせない
   if(!ctx) return;
   setPad(cur);
@@ -599,16 +679,21 @@ function strike(){
 function finish(){
   done=true; running=false; stopLoop(6000);
   $('#run').textContent='掘削開始'; $('#run').disabled=true;
-  $('#bit').classList.remove('spin');
-  setMsg('所定深度に到達。ケーシングとストレーナーを建て込み、井戸は完成です。'
+  $('#bit').classList.remove('spin'); closeJarUI();
+  setMsg('出水。ここで掘進を止め、ケーシングとストレーナーを建て込みました。'
+    +'深さ'+depth.toFixed(0)+'m・水位GL−'+G.swl.toFixed(1)+'m。'
     +(scarCount?'（地中に残したビット：'+scarCount+'本）':''));
   // 全長ケーシング建て込み演出
   casingFull=true;
   const c=$('#casing');
   c.style.transition='height 2.6s ease';
-  c.style.height=G.max*PXM+'px';
+  c.style.height=depth*PXM+'px';
   if(ctx){ padG.gain.setTargetAtTime(0,ctx.currentTime,.9);
     [52,59,64,71].forEach((n,i)=>pluck(ctx.currentTime+i*.12,n,.16,'sine',3.4)); }
+  let n=60;                                  // 水位が上がりきるまで描画を続ける
+  const settleId=setInterval(()=>{ paint();
+    if(running || (Math.abs(waterLvl-G.swl)<=0.15 && --n<=0)) clearInterval(settleId);
+  },50);
 }
 function draw(){ if(!running) return; paint(); rafId=requestAnimationFrame(draw); }
 function startLoop(){
@@ -644,19 +729,14 @@ $('#pump').onclick=()=>{
   if(running){ ctx.resume();
     waterG.gain.setTargetAtTime(pumping?mud/1400:0,ctx.currentTime,.4); }
 };
-$('#jar').onclick=()=>{
-  if(!ctx || !trouble || trouble.phase!=='jar') return;
-  const t=ctx.currentTime;
-  clank(t,true);
-  trouble.untilT=Math.max(t+.6,trouble.untilT-.5);      // 早く抜ける
-  trouble.bonus=Math.min(.25,trouble.bonus+.04);        // 成功率も少し上がる
-};
+$('#jar').onclick=jab;
 $('#reset').onclick=()=>{
   running=false; stopLoop(); depth=0; struck=false; done=false; cur=null; step=0;
   warnMsg=null; casingFull=false;
-  trouble=null; scarCount=0; redrillTo=0; lastTroubleT=-99;
+  trouble=null; scarCount=0; redrillTo=0; knownTo=0; lastTroubleT=-99;
+  finishAt=0; waterLvl=0; holeX=0; applyHoleX();
   document.querySelectorAll('.scar').forEach(e=>e.remove());
-  $('#jar').disabled=true;
+  closeJarUI();
   $('#bit').classList.remove('stuck');
   const c=$('#casing'); c.style.transition='none'; c.style.height='0px';
   G=buildStrata(); render(); paint();
@@ -676,7 +756,7 @@ document.addEventListener('visibilitychange',()=>{
   if(!document.hidden && running && ctx) ctx.resume();
 });
 
-render(); paint();
+applyHoleX(); render(); paint();
 </script>
 <script>
 /* オフラインとホーム画面起動のための Service Worker */
