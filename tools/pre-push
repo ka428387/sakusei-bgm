@@ -1,0 +1,9 @@
+#!/bin/sh
+# さく井業BGM生成器 公開前チェック（tools/check.py）。1つでも失敗したら push を止める。
+# どうしても止めずに push したいときだけ： git push --no-verify
+Z=0000000000000000000000000000000000000000
+while read local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$Z" ] && continue
+  if [ "$remote_sha" = "$Z" ]; then base=""; else base="--base $remote_sha"; fi
+  python3 tools/check.py --commit "$local_sha" $base || exit 1
+done
