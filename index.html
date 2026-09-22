@@ -60,7 +60,7 @@
     position:relative;min-height:0;overflow:hidden;
     display:flex;flex-direction:column;justify-content:flex-end;
     text-decoration:none;color:inherit;
-    border:1px solid var(--line);border-radius:4px;
+    border:1px solid var(--line);border-radius:3px;
     background:#171310;
     background-size:cover;background-position:top center;background-repeat:no-repeat;
     transition:border-color .18s,transform .18s;
@@ -68,15 +68,19 @@
   /* 切り出し位置：ロータリーは砂岩から破砕帯まで、パーカッションはやぐらのある地表 */
   .card.rot{background-image:url(screenshot-rotary.png);background-position:center 30%}
   .card.per{background-image:url(screenshot-percussion.png);background-position:top center}
-  .card::before{                                  /* 文字を読ませるための覆い */
+  .card::before{                                  /* 上の絵は見せ、文字の背後だけ沈める */
     content:"";position:absolute;inset:0;
-    background:linear-gradient(180deg,rgba(18,14,11,.10) 0%,rgba(18,14,11,.78) 42%,rgba(18,14,11,.96) 76%);
+    background:linear-gradient(180deg,rgba(18,14,11,0) 0%,rgba(18,14,11,.20) 31%,rgba(18,14,11,.80) 55%,rgba(18,14,11,.97) 82%);
   }
+  .card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;opacity:.82}
+  .card.rot::after{background:linear-gradient(90deg,#A75C34,transparent 58%)}
+  .card.per::after{background:linear-gradient(90deg,#3979A9,transparent 58%)}
   .card:hover,.card:focus-visible{border-color:#6B5D4E;transform:translateY(-2px)}
   .card:focus-visible{outline:2px solid var(--spring);outline-offset:3px}
 
   .card .body{position:relative;padding:14px 16px 15px}
-  .kind{font-size:10px;letter-spacing:.3em;margin-bottom:6px}
+  .kind{display:inline-flex;align-items:center;width:max-content;padding:2px 6px 2px 8px;margin-bottom:7px;
+    border:1px solid currentColor;background:rgba(17,14,12,.62);font-size:9px;letter-spacing:.28em;line-height:1.45}
   .card.rot .kind{color:#E0916A}
   .card.per .kind{color:#8FBEE0}
   .card h2{
@@ -88,7 +92,8 @@
     display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 14px;margin-top:9px;
     font-size:11px;color:#A9A093;font-variant-numeric:tabular-nums;
   }
-  .meta .go{margin-left:auto;font-size:12.5px;letter-spacing:.1em;white-space:nowrap}
+  .meta .go{margin-left:auto;padding-left:12px;border-left:1px solid currentColor;
+    font-size:12.5px;letter-spacing:.1em;white-space:nowrap}
   .card.rot .go{color:#E0916A}
   .card.per .go{color:#8FBEE0}
 
@@ -109,6 +114,7 @@
     .card .body{padding:20px 22px 22px}
     .card p{line-height:1.85}
     .meta{margin-top:14px;font-size:12px}
+    .card::before{background:linear-gradient(180deg,rgba(18,14,11,0) 0%,rgba(18,14,11,.12) 34%,rgba(18,14,11,.78) 58%,rgba(18,14,11,.97) 84%)}
   }
   @media (prefers-reduced-motion:reduce){
     .card{transition:none}

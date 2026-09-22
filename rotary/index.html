@@ -77,6 +77,24 @@
     background:#12100E;
   }
   .stack{position:absolute;left:0;right:0;top:0;will-change:transform}
+  /* ロータリー式の地上設備。パーカッション編とは錆橙と黒鉄で描き分ける */
+  .sky{position:absolute;left:0;right:0;top:-150px;height:150px;
+    background:
+      linear-gradient(180deg,rgba(11,16,21,.15),rgba(11,12,12,.05) 68%,rgba(33,35,30,.95) 100%),
+      linear-gradient(180deg,#18222B 0%,#303D43 58%,#665447 91%,#282A24 100%)}
+  .rotary-rig{position:absolute;top:-142px;left:calc(46px + 34% - 76px + var(--hx,0px));
+    width:178px;height:146px;pointer-events:none;transition:left .9s ease;
+    filter:drop-shadow(0 4px 5px rgba(0,0,0,.38))}
+  .mud-pit{position:absolute;top:-22px;left:calc(46px + 34% + 92px + var(--hx,0px));
+    width:72px;height:18px;pointer-events:none;transition:left .9s ease;
+    border:1px solid rgba(104,83,61,.9);border-top-color:#806344;
+    background:linear-gradient(180deg,rgba(86,73,56,.48),rgba(35,31,26,.92));
+    box-shadow:inset 0 4px 0 rgba(87,100,72,.34),0 3px 5px rgba(0,0,0,.35)}
+  .mud-pit::before{content:"";position:absolute;left:5px;right:5px;top:3px;height:3px;
+    background:linear-gradient(90deg,transparent,rgba(154,141,96,.42),transparent)}
+  .mud-pit::after{content:"";position:absolute;left:-53px;top:-12px;width:56px;height:18px;
+    border-top:2px solid #81573A;border-right:2px solid #81573A;border-radius:0 12px 0 0;
+    transform:rotate(-4deg);transform-origin:right bottom;opacity:.82}
   .ruler{position:absolute;left:0;top:0;width:46px;bottom:0}
   .tick{position:absolute;left:0;width:46px;border-top:1px solid rgba(232,226,214,.16)}
   .tick.major{border-top-color:rgba(232,226,214,.42)}
@@ -86,6 +104,9 @@
   }
   .strata{position:absolute;left:46px;right:0;top:0}
   .layer{position:relative;width:100%}
+  .layer::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(90deg,rgba(255,255,255,.035),transparent 22%,rgba(0,0,0,.07) 72%,transparent);
+    mix-blend-mode:soft-light}
   .layer .nm{
     position:absolute;left:10px;top:6px;
     font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
@@ -99,6 +120,9 @@
     background:#0A0908;transition:left .9s ease;
     box-shadow:inset 2px 0 0 rgba(0,0,0,.6), inset -2px 0 0 rgba(0,0,0,.6);
   }
+  .hole::before,.hole::after{content:"";position:absolute;top:0;bottom:0;width:2px;opacity:.6;
+    background:repeating-linear-gradient(180deg,#6D5944 0 2px,transparent 2px 7px)}
+  .hole::before{left:-1px}.hole::after{right:-1px;transform:translateY(3px)}
   .casing{position:absolute;width:34px;left:calc(46px + 34% - 4px + var(--hx,0px));top:0;
     transition:left .9s ease;
     background:repeating-linear-gradient(180deg,rgba(190,180,160,.30) 0 3px,transparent 3px 11px);
@@ -108,6 +132,17 @@
 
   /* 掘進線 */
   .bitline{position:absolute;left:0;right:0;pointer-events:none}
+  .bitline:has(.bit.spin)::before{content:"";position:absolute;
+    left:calc(46px + 34% - 9px + var(--hx,0px));top:8px;width:42px;height:13px;
+    border-radius:50%;opacity:.55;
+    background:radial-gradient(ellipse,rgba(190,153,100,.42) 0 18%,rgba(153,117,75,.18) 36%,transparent 68%);
+    animation:cuttings .48s steps(3,end) infinite}
+  .bitline:has(.bit.spin)::after{content:"";position:absolute;
+    left:calc(46px + 34% - 4px + var(--hx,0px));top:7px;width:32px;height:10px;
+    background:radial-gradient(circle at 10% 55%,#B49A72 0 1px,transparent 1.5px),
+      radial-gradient(circle at 42% 20%,#8F7454 0 1.2px,transparent 1.8px),
+      radial-gradient(circle at 78% 65%,#C0A27A 0 1px,transparent 1.6px);
+    animation:chips .62s steps(4,end) infinite}
   .bitline .rule{position:absolute;left:46px;right:0;height:1px;background:rgba(255,140,60,.5)}
   .bitline .bit{
     position:absolute;left:calc(46px + 34% + 1px + var(--hx,0px));width:22px;height:26px;top:-13px;
@@ -117,6 +152,8 @@
   }
   .bitline .bit.spin{animation:jig .09s linear infinite}
   @keyframes jig{0%{transform:translateX(-.6px)}50%{transform:translateX(.6px)}100%{transform:translateX(-.6px)}}
+  @keyframes cuttings{0%{transform:scale(.72,.55);opacity:.18}55%{transform:scale(1.12,.9);opacity:.62}100%{transform:scale(1.35,1);opacity:0}}
+  @keyframes chips{0%{transform:translateY(0) scale(.8);opacity:.25}45%{transform:translateY(-5px) scale(1);opacity:.7}100%{transform:translateY(2px) scale(1.15);opacity:0}}
   .bitline .bit.stuck{animation:stuckjig .55s ease-in-out infinite}
   @keyframes stuckjig{0%,100%{transform:translateY(0)}45%{transform:translateY(-4px)}62%{transform:translateY(1.5px)}}
   /* 放棄孔：セメントで埋めた古い孔と残置ビット */
@@ -209,7 +246,7 @@
   @keyframes urge{0%,100%{box-shadow:0 0 0 0 rgba(224,160,80,.5)}50%{box-shadow:0 0 0 6px rgba(224,160,80,0)}}
   .hint{margin-top:9px;font-size:10px;color:#7A7164;letter-spacing:.04em;text-align:center}
   @media (prefers-reduced-motion:reduce){
-    .bitline .bit.spin,.bitline .bit.stuck,.log.quake,button.urgent{animation:none}
+    .bitline .bit.spin,.bitline .bit.stuck,.bitline:has(.bit.spin)::before,.bitline:has(.bit.spin)::after,.log.quake,button.urgent{animation:none}
     .flash.on,.shout.on{animation-duration:.01s}
   }
 </style>
@@ -224,6 +261,29 @@
 
 <div class="log" id="log">
   <div class="stack" id="stack">
+    <div class="sky"></div>
+    <svg class="rotary-rig" aria-hidden="true" viewBox="0 0 178 146" fill="none">
+      <path d="M26 142 L68 10 M132 142 L91 10" stroke="#26292A" stroke-width="7" stroke-linecap="round"/>
+      <path d="M29 142 L70 10 M129 142 L89 10" stroke="#98522F" stroke-width="2.4" stroke-linecap="round" opacity=".92"/>
+      <path d="M72 8 L72 139 M88 8 L88 139" stroke="#43484A" stroke-width="5"/>
+      <path d="M74 8 L74 139 M86 8 L86 139" stroke="#B16A3C" stroke-width="1.5" opacity=".78"/>
+      <g stroke="#6B4B37" stroke-width="1.8" opacity=".95">
+        <path d="M72 22H88 M72 42H88 M72 62H88 M72 82H88 M72 102H88 M72 122H88"/>
+        <path d="M72 22L88 42 M88 22L72 42 M72 62L88 82 M88 62L72 82 M72 102L88 122 M88 102L72 122"/>
+      </g>
+      <rect x="64" y="50" width="32" height="24" rx="2" fill="#303638" stroke="#A45D34" stroke-width="1.8"/>
+      <rect x="69" y="55" width="22" height="9" fill="#565A56"/>
+      <circle cx="80" cy="68" r="3" fill="#181A19" stroke="#AA704A"/>
+      <path d="M80 74V144" stroke="#B9AD95" stroke-width="4"/>
+      <path d="M80 74V144" stroke="#534B40" stroke-width="1"/>
+      <path d="M95 58 C126 58 122 87 151 92 C163 94 166 106 163 119" stroke="#252727" stroke-width="5" stroke-linecap="round"/>
+      <path d="M95 58 C126 58 122 87 151 92 C163 94 166 106 163 119" stroke="#7F5438" stroke-width="1.5" stroke-linecap="round" opacity=".8"/>
+      <path d="M17 140H143" stroke="#292B29" stroke-width="8"/>
+      <path d="M17 137H143" stroke="#9C5A34" stroke-width="2"/>
+      <rect x="104" y="116" width="39" height="21" fill="#282D2D" stroke="#6D503D" stroke-width="1.5"/>
+      <circle cx="115" cy="126" r="5" fill="#171919" stroke="#8C7259"/>
+    </svg>
+    <div class="mud-pit" aria-hidden="true"></div>
     <div class="ruler" id="ruler"></div>
     <div class="strata" id="strata"></div>
     <div class="hole" id="hole"></div>
@@ -288,13 +348,13 @@ function buildStrata(){
 let G = buildStrata();
 
 const PATTERNS = {
-  dot:  'radial-gradient(rgba(255,240,215,.20) 1px, transparent 1.2px)',
-  line: 'repeating-linear-gradient(180deg,rgba(0,0,0,.28) 0 1px,transparent 1px 9px)',
-  grain:'radial-gradient(rgba(255,245,220,.34) 1.6px, transparent 1.9px)',
-  cross:'repeating-linear-gradient(45deg,rgba(255,255,255,.13) 0 1px,transparent 1px 8px),repeating-linear-gradient(-45deg,rgba(255,255,255,.13) 0 1px,transparent 1px 8px)',
-  wave: 'repeating-linear-gradient(180deg,rgba(180,240,255,.22) 0 2px,transparent 2px 10px)',
+  dot:  'radial-gradient(ellipse at 24% 42%,rgba(255,235,202,.25) 0 1px,transparent 1.5px),radial-gradient(ellipse at 71% 68%,rgba(55,36,23,.20) 0 1.2px,transparent 1.8px)',
+  line: 'repeating-linear-gradient(178deg,rgba(20,18,15,.30) 0 1px,transparent 1px 8px),repeating-linear-gradient(182deg,transparent 0 17px,rgba(232,220,188,.08) 18px 19px,transparent 20px 31px)',
+  grain:'radial-gradient(ellipse at 20% 35%,rgba(255,242,215,.36) 0 1.4px,transparent 2px),radial-gradient(ellipse at 72% 70%,rgba(56,43,30,.28) 0 2px,transparent 2.6px),radial-gradient(ellipse at 48% 12%,rgba(238,211,164,.18) 0 1px,transparent 1.8px)',
+  cross:'repeating-linear-gradient(42deg,rgba(255,255,255,.11) 0 1px,transparent 1px 9px),repeating-linear-gradient(-38deg,rgba(18,15,20,.22) 0 1px,transparent 1px 11px),radial-gradient(circle at 30% 40%,rgba(210,190,175,.12) 0 1.3px,transparent 2px)',
+  wave: 'repeating-linear-gradient(176deg,rgba(180,240,255,.20) 0 1px,transparent 2px 9px),repeating-linear-gradient(64deg,transparent 0 22px,rgba(202,226,224,.11) 23px 24px,transparent 25px 41px)',
 };
-const PSIZE = {dot:'11px 11px',grain:'16px 16px',line:'auto',cross:'auto',wave:'auto'};
+const PSIZE = {dot:'17px 13px,23px 19px',grain:'21px 17px,29px 23px,17px 31px',line:'auto',cross:'auto',wave:'auto'};
 
 function render(){
   const strata = $('#strata'), ruler = $('#ruler');
