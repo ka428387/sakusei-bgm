@@ -82,7 +82,7 @@
     background:
       linear-gradient(180deg,rgba(11,16,21,.15),rgba(11,12,12,.05) 68%,rgba(33,35,30,.95) 100%),
       linear-gradient(180deg,#18222B 0%,#303D43 58%,#665447 91%,#282A24 100%)}
-  .rotary-rig{position:absolute;top:-142px;left:calc(46px + 34% - 76px + var(--hx,0px));
+  .rotary-rig{position:absolute;top:-142px;left:calc(46px + 34% - 68px + var(--hx,0px));
     width:178px;height:146px;pointer-events:none;transition:left .9s ease;
     filter:drop-shadow(0 4px 5px rgba(0,0,0,.38))}
   .mud-pit{position:absolute;top:-22px;left:calc(46px + 34% + 92px + var(--hx,0px));
@@ -328,6 +328,7 @@
 <script>
 const PXM = 5;                       // 1m = 5px
 const SURF_CASING = 12;              // 表層ケーシング建て込み深さ m
+const RIG_SWIVEL = 68;               // 地表からリグの絵のスイベル下端までの高さ px（.rotary-rig の top:-142 と絵の y=74 から）
 const $ = s => document.querySelector(s);
 
 /* ───────── 地層 ───────── */
@@ -398,6 +399,9 @@ function paint(){
   const line = $('#log').clientHeight*0.38;
   $('#stack').style.transform='translateY('+(line-depth*PXM)+'px)';
   $('#bitline').style.top=line+'px';
+  const rodLen=depth*PXM+RIG_SWIVEL;                        // ロッドはビットからスイベルまで
+  $('.bitline .rod').style.top=-rodLen+'px';
+  $('.bitline .rod').style.height=rodLen+'px';
   $('#depth').textContent=depth.toFixed(1);
   $('#hole').style.height=Math.min(depth,G.max)*PXM+'px';
   // 掘削中は表層ケーシングのみ。全長ケーシングは完成時に建て込む
