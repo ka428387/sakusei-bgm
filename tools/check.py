@@ -182,16 +182,22 @@ def run_selftest(root, timeout=180):
             ('ロータリー編', 'rotary/index.html', (390, 844)),
             ('パーカッション編', 'percussion/index.html', (390, 844))]
     for name, page, (w, h) in runs:
-        t0 = time.time()
-        ud = tempfile.mkdtemp()
-        p = subprocess.Popen([CHROME, '--headless=new', '--autoplay-policy=no-user-gesture-required', '--no-first-run',
-                              '--no-default-browser-check', f'--window-size={w},{h}', f'--user-data-dir={ud}',
-                              f'http://127.0.0.1:{port}/{page}?selftest'],
-                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        while name not in res and time.time() - t0 < timeout and p.poll() is None: time.sleep(.3)
-        p.kill(); p.wait(); shutil.rmtree(ud, ignore_errors=True)
+        # Chrome の起動が一度詰まることがあるので、終わらなかったときは1回だけやり直す
+        # （トップは2秒で終わるので待ちを短く、ほかは掘る動きを含むので長く）
+        limit = 45 if name == 'トップ' else timeout
+        for attempt in (1, 2):
+            t0 = time.time()
+            ud = tempfile.mkdtemp()
+            p = subprocess.Popen([CHROME, '--headless=new', '--autoplay-policy=no-user-gesture-required', '--no-first-run',
+                                  '--no-default-browser-check', f'--window-size={w},{h}', f'--user-data-dir={ud}',
+                                  f'http://127.0.0.1:{port}/{page}?selftest'],
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            while name not in res and time.time() - t0 < limit and p.poll() is None: time.sleep(.3)
+            p.kill(); p.wait(); shutil.rmtree(ud, ignore_errors=True)
+            if name in res: break
+            if attempt == 1: print(f'  - {name}：終わらなかったので、もう一度やり直す')
         if name not in res:
-            ng(f'{name}：動作テストが最後まで終わらなかった', f'{timeout}秒以内に結果が返ってこない（途中で止まった可能性）'); continue
+            ng(f'{name}：動作テストが最後まで終わらなかった', f'{limit}秒以内に結果が返ってこない（2回試した）'); continue
         for r in res[name].get('results', []):
             if r.get('note'): print(f"  - {r['name']}"); continue
             (ok if r['ok'] else ng)(r['name'], *([r['detail']] if not r['ok'] and r.get('detail') else []))
