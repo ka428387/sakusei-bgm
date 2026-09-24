@@ -164,6 +164,15 @@
         `掘進長 ${depth.toFixed(2)}m（帯水層 ${G.aq.toFixed(1)}m）`);
     }
     check('完成したら掘削開始は押せない', $q('#run').disabled);
+    check('完成したあとも環境音が鳴り続ける（無音にならない）', !!ambientId, 'ambientId がない');
+    let ambErr = ''; try { for (let i = 0; i < 6; i++) ambientTick(); } catch (e) { ambErr = String(e); }
+    check('環境音の処理が最後まで動く', !ambErr, ambErr);
+    check('ジャーリングを連打しても文字や画像が選択されない（青くならない）',
+      getComputedStyle(document.body).userSelect === 'none' && getComputedStyle($q('#jar')).userSelect === 'none' &&
+        getComputedStyle($q('#jar')).touchAction === 'manipulation',
+      `body ${getComputedStyle(document.body).userSelect} / ボタン ${getComputedStyle($q('#jar')).userSelect} ${getComputedStyle($q('#jar')).touchAction}`);
+    $q('#reset').click();
+    check('「新しい井戸」で環境音が止まる', ambientId === null, 'ambientId が残っている');
     clearInterval(drive);
   }
 })();

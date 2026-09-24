@@ -49,6 +49,9 @@
     overflow:hidden;
     display:flex;flex-direction:column;
     height:100dvh;
+    -webkit-user-select:none;user-select:none;                 /* 連打で文字や画像が選択されて青くならない */
+    -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;                                 /* ダブルタップの拡大もしない */
   }
   .mincho{font-family:"Hiragino Mincho ProN","Yu Mincho",serif}
 
@@ -208,6 +211,8 @@
     background:transparent;color:var(--paper);
     border:1px solid #5C5145;border-radius:2px;cursor:pointer;
     letter-spacing:.12em;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation;
   }
   button.go{background:var(--rust);border-color:var(--rust)}
   button:disabled{opacity:.32;cursor:default}
@@ -846,6 +851,39 @@ function drillStep(t){
 }
 
 /* ───────── 完成 ───────── */
+/* ───────── 完成後の環境音：無音にしない ─────────
+   井戸の底の水と、地層のルート音の低いうなり、ときどき低めの柔らかい一音だけ。
+   高い音程は入れない（環境音に音程があると鳥に聞こえる）。「新しい井戸」を押すまで続く */
+let ambientId=null;
+function ambNote(t,note){
+  const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=hz(note);
+  const g=ctx.createGain();
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.055,t+.35);   // ゆっくり立ち上げて丸く
+  g.gain.exponentialRampToValueAtTime(.0001,t+4.2);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+4.3);
+}
+function ambientTick(){
+  if(!ctx||!done) return;
+  if(ctx.state==='suspended') ctx.resume();
+  const L=layerAt(depth), t=ctx.currentTime;
+  padG.gain.setTargetAtTime(.03+Math.random()*.03,t,2.2);                  // ゆっくり息をするように
+  if(Math.random()<.5) ambNote(t+.05,L.root+12+L.sc[Math.floor(Math.random()*L.sc.length)]);
+}
+function startAmbient(){
+  if(!ctx) return;
+  clearTimeout(suspendTO); ctx.resume();                                   // stopLoop が予約した停止を取り消す
+  const L=layerAt(depth), t=ctx.currentTime;
+  padA.frequency.setTargetAtTime(hz(L.root-12),t,1.5);
+  padB.frequency.setTargetAtTime(hz(L.root-12)*1.004,t,1.5);
+  padF.frequency.setTargetAtTime(220,t,1.5);
+  padG.gain.setTargetAtTime(.045,t+2,2.5);                                 // 完成の和音の余韻のあとで
+  waterF.frequency.setTargetAtTime(900,t,1);
+  waterG.gain.setTargetAtTime(.03,t,1.5);
+  clearInterval(ambientId);
+  ambientId=setInterval(ambientTick,2600);
+}
+function stopAmbient(){ clearInterval(ambientId); ambientId=null; }
+
 function finish(){
   done=true; running=false; stopLoop(6000);
   $('#run').textContent='掘削開始'; $('#run').disabled=true;
@@ -857,8 +895,8 @@ function finish(){
   setMsg('出水。ここで掘進を止め、ケーシングとストレーナーを建て込みました。'
     +'深さ'+depth.toFixed(1)+'m・水位GL−'+G.swl.toFixed(1)+'m。'
     +(scarCount?'（地中に残したビット：'+scarCount+'本）':''));
-  if(ctx){ padG.gain.setTargetAtTime(0,ctx.currentTime,.9);
-    [52,59,64,71].forEach((n,i)=>pluck(ctx.currentTime+i*.12,n,.16,'sine',3.4)); }
+  if(ctx){ [52,59,64,71].forEach((n,i)=>pluck(ctx.currentTime+i*.12,n,.16,'sine',3.4)); }
+  startAmbient();
   let n=60;                                  // 水位が上がりきるまで描画を続ける
   const settleId=setInterval(()=>{ paint();
     if(running || (Math.abs(waterLvl-G.swl)<=0.15 && --n<=0)) clearInterval(settleId);
@@ -949,6 +987,7 @@ $('#bail').onclick=()=>{
 };
 $('#jar').onclick=jab;
 $('#reset').onclick=()=>{
+  stopAmbient();
   running=false; stopLoop(); cancelAnimationFrame(rafId);
   depth=0; struck=false; done=false; cur=null; step=0;
   slime=0; drilledSinceBail=0; waterLvl=0; camY=0; cycle=null;
@@ -969,7 +1008,7 @@ $('#bpm').oninput=e=>{ bpm=+e.target.value; $('#bpmV').textContent=bpm; };
 $('#stroke').oninput=e=>{ stroke=+e.target.value; $('#strokeV').textContent=stroke; };
 addEventListener('resize',paint);
 document.addEventListener('visibilitychange',()=>{
-  if(!document.hidden && running && ctx) ctx.resume();
+  if(!document.hidden && (running||ambientId) && ctx) ctx.resume();
 });
 
 applyHoleX(); render(); paint();
