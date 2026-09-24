@@ -22,8 +22,8 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGES = ['index.html', 'rotary/index.html', 'percussion/index.html']
 MANIFESTS = ['manifest.webmanifest', 'rotary/manifest.webmanifest', 'percussion/manifest.webmanifest']
 # キャッシュ番号を上げなくてよいファイル（アプリの表示に関係しない・オフライン用の一覧に入っていない）
-# 公開する変更記録の作者・コミッターは、この名前とメールに限る（本名やGmailを公開履歴に残さない）
-ANON_NAME = 'ka428387'
+# 公開する変更記録の作者・コミッターは、この名前と noreply のメールに限る（本名やGmailを公開履歴に残さない）
+ANON_NAMES = ('ka428387', 'kasumi')
 ANON_MAIL_SUFFIX = '@users.noreply.github.com'
 NO_CACHE_BUMP = re.compile(r'^(tools/|README\.md$|LICENSE$|\.gitignore$|og[\w-]*\.png$)')
 
@@ -116,22 +116,22 @@ def check_authors(base, commit):
     ほかの環境（Codex の作業用クローンなど）で作ったコミットを取り込むと、本名が入ることがある"""
     if not base: print('  - 作者欄：比べる版がないので省略'); return
     me = git('config', 'user.name').strip()
-    if me != ANON_NAME:
-        print(f'  ! この端末の git の名前が「{me}」になっている（公開用は「{ANON_NAME}」）。'
-              f'コミットするときは git -c user.name={ANON_NAME} commit のように指定する')
+    if me not in ANON_NAMES:
+        print(f'  ! この端末の git の名前が「{me}」になっている（公開してよいのは {" / ".join(ANON_NAMES)}）。'
+              f'コミットするときは git -c user.name={ANON_NAMES[0]} commit のように指定する')
     rows = [r for r in git('log', '--format=%h|%an|%ae|%cn|%ce', f'{base}..{commit or "HEAD"}').split('\n') if r]
     bad = []
     for r in rows:
         h, an, ae, cn, ce = r.split('|')
         for who, name, mail in (('作者', an, ae), ('コミッター', cn, ce)):
-            if not mail.endswith(ANON_MAIL_SUFFIX) or name != ANON_NAME:
+            if not mail.endswith(ANON_MAIL_SUFFIX) or name not in ANON_NAMES:
                 bad.append(f'{h} の{who}')
     if bad:
         ng('公開する変更記録に、匿名（noreply）でない作者・コミッターがいる',
            ', '.join(bad[:6]) + f'。git log --format=\'%h %an <%ae>\' で確かめ、'
            'git commit --amend --reset-author（古いものは git rebase -i）で付け直してから公開する')
     else:
-        ok(f'作者欄：公開する{len(rows)}件はすべて匿名（{ANON_NAME}）')
+        ok(f'作者欄：公開する{len(rows)}件はすべて匿名（{" / ".join(ANON_NAMES)}）')
 
 def check_cache_bump(root, base, commit):
     if not base: print('  - キャッシュ番号：比べる版がないので省略'); return
