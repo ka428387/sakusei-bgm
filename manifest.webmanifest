@@ -1,6 +1,6 @@
 {
-  "name": "さく井業BGM生成器",
-  "short_name": "さく井業BGM",
+  "name": "井戸ビート",
+  "short_name": "井戸ビート",
   "description": "井戸を掘ると、地層が音楽になる。ロータリー式とパーカッション式、2つの掘り方で井戸を掘るBGM生成器。",
   "lang": "ja",
   "dir": "ltr",

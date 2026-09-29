@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""さく井業BGM生成器 公開前チェック
+"""井戸ビート 公開前チェック
 
 使い方:
   python3 tools/check.py                 いまのフォルダの中身をチェック
@@ -217,7 +217,7 @@ def main():
         root = tmp
     base = a.base or (git('rev-parse', '--verify', '-q', 'origin/main').strip() or None)
     label = a.commit or 'いまのフォルダ'
-    print(f'\n■ さく井業BGM生成器 公開前チェック（{label}）\n\n1段目：ファイルの点検')
+    print(f'\n■ 井戸ビート 公開前チェック（{label}）\n\n1段目：ファイルの点検')
     check_syntax(root)
     check_files(root); check_markers(root); check_authors(base, a.commit); check_cache_bump(root, base, a.commit)
     if not a.quick:
