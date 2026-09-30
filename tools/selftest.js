@@ -30,6 +30,7 @@
   const withRandom = (v, fn) => { const r = Math.random; Math.random = () => v; try { return fn(); } finally { Math.random = r; } };
   const box = s => $q(s).getBoundingClientRect();
   const cx = r => r.left + r.width / 2;
+  const shown = el => !!el && getComputedStyle(el).display !== 'none';   // hidden の値ではなく、実際に見えているか
 
   try {
     if (PAGE === 'トップ') await testTop();
@@ -46,7 +47,7 @@
     const cards = [...document.querySelectorAll('a.card')];
     const hrefs = cards.map(a => a.getAttribute('href'));
     check('工法のカードが2枚ある', hrefs.includes('rotary/') && hrefs.includes('percussion/'), hrefs.join(', '));
-    check('Web版には応援ボタンが出ない', $q('#tipBtn').hidden, '購入の部品がないのにボタンが出ている');
+    check('Web版には応援ボタンが出ない（実際に見えていない）', !shown($q('#tipBtn')), '購入の部品がないのにボタンが出ている');
     // スマホの表示域の大きさで開き、スクロールせずに両方の工法が見えるか。
     // 必須：画面の大きさ（iPhone SE 375×667）と、Safari の表示域（iPhone 14 など 390×664）。参考：SE を Safari で開いたとき
     const sizes = [[375, 667, true], [390, 664, true], [430, 739, true], [375, 548, false]];
@@ -68,14 +69,14 @@
   // 応援の画面：ボタン→金額→キャンセル→応援→手紙。アプリの画面の大きさでもスクロールなしに収まる
   async function testNativeTop() {
     const btn = $q('#tipBtn');
-    check('アプリの中では応援ボタンが出る', btn && !btn.hidden, '応援ボタンが隠れたまま');
+    check('アプリの中では応援ボタンが出る（実際に見えている）', shown(btn), '応援ボタンが隠れたまま');
     btn.click();
     check('ボタンを押すと応援の画面が開く', await until(() => $q('#tipM').classList.contains('on'), 2000));
     check('金額のボタンが3つ、名前と値段つきで並ぶ',
       await until(() => $q('#tipActs').querySelectorAll('button').length === 3, 3000) &&
         [...$q('#tipActs').querySelectorAll('button')].map(b => b.textContent).join('|') === 'ちょっと応援　¥160|応援　¥480|たっぷり応援　¥980',
       [...$q('#tipActs').querySelectorAll('button')].map(b => b.textContent).join('|'));
-    check('応援する前は「手紙を読む」が出ていない', $q('#thanksActs').hidden);
+    check('応援する前は「手紙を読む」が見えていない', !shown($q('#thanksActs')), '応援していないのに手紙のボタンが見えている');
     __store.next = 'cancelled';
     $q('#tipActs button').click(); await wait(400);
     check('キャンセルしても、何も変わらず、手紙も開かない', __store.tips === 0 && !$q('#letterM').classList.contains('on') && !$q('#tipActs button').disabled,
@@ -88,7 +89,7 @@
     $q('#letterClose').click();
     check('手紙を閉じると、応援の画面は閉じている（もう一度は勝手に開かない）', !$q('#letterM').classList.contains('on') && !$q('#tipM').classList.contains('on'));
     $q('#tipBtn').click(); await until(() => $q('#tipActs').querySelectorAll('button').length === 3, 3000);
-    check('応援したあとは「手紙を読む」が出て、回数が書かれる', !$q('#thanksActs').hidden && /1 回/.test($q('#tipP').textContent), $q('#tipP').textContent.slice(-40));
+    check('応援したあとは「手紙を読む」が見えて、回数が書かれる', shown($q('#thanksActs')) && /1 回/.test($q('#tipP').textContent), $q('#tipP').textContent.slice(-40));
     $q('#tipActs button').click(); await wait(500);
     check('2回目の応援では、手紙が自動では開かない', __store.tips === 2 && !$q('#letterM').classList.contains('on'), `回数 ${__store.tips}`);
     // 応援ボタンが出ている状態でも、スマホでスクロールせずに両方の工法が見える
@@ -99,7 +100,7 @@
       await new Promise(r => f.onload = r); await wait(250);
       const d = f.contentDocument, sh = d.documentElement.scrollHeight;
       const fits = sh <= h + 1 && [...d.querySelectorAll('a.card')].every(a => a.getBoundingClientRect().bottom <= h + 1) &&
-        d.getElementById('tipBtn').getBoundingClientRect().bottom <= h + 1 && !d.getElementById('tipBtn').hidden;
+        d.getElementById('tipBtn').getBoundingClientRect().bottom <= h + 1 && d.defaultView.getComputedStyle(d.getElementById('tipBtn')).display !== 'none';
       const tb = d.getElementById('tipBtn').getBoundingClientRect();
       check(`応援ボタンが出ていても、スマホ ${w}×${h} でスクロールせずに収まる`, fits,
         `ページの高さ ${sh}px / カードの下端 ${[...d.querySelectorAll('a.card')].map(a => Math.round(a.getBoundingClientRect().bottom)).join(',')} / 応援ボタン 隠れている=${d.getElementById('tipBtn').hidden} 下端 ${Math.round(tb.bottom)} / 代役 ${!!d.defaultView.Capacitor} / エラー ${(d.defaultView.__errs || []).join(' | ')} / URL ${f.contentWindow.location.search}`);

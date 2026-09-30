@@ -108,6 +108,7 @@
   .foot .about b{color:#CFC6B6;font-weight:500}
   .foot .end{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;
     font-size:11px;color:#6E6558;letter-spacing:.04em}
+  [hidden]{display:none!important}                     /* 指定した表示方法（flex など）に負けて、隠したものが見えてしまわないように */
   .tipbtn{margin-left:auto;font:inherit;font-size:12.5px;letter-spacing:.12em;padding:7px 12px;cursor:pointer;
     color:#E0916A;background:transparent;border:1px solid #7A4A2A;border-radius:2px}
   .tipbtn:hover{border-color:#B06A3E}
@@ -130,7 +131,7 @@
   .sheet.letter p{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:14.5px;line-height:2.05}
   .sheet.letter .sign{margin-top:10px;text-align:right;letter-spacing:.12em}
   .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);
-    z-index:40;max-width:calc(100% - 40px);padding:10px 16px;font-size:13px;color:var(--paper);
+    z-index:40;width:max-content;max-width:calc(100% - 40px);padding:10px 16px;font-size:13px;color:var(--paper);
     background:#2A241E;border:1px solid #5C5145;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .25s}
   .toast.on{opacity:1}
 
@@ -210,7 +211,7 @@
   <h3 id="tipT">井戸ビートを応援する</h3>
   <p id="tipP"></p>
   <div class="acts" id="tipActs"></div>
-  <div class="acts" id="thanksActs" hidden><button class="btn" id="tipLetter" type="button">✉ ビットからの手紙を読む</button></div>
+  <div class="acts" id="thanksActs" hidden><button class="btn" id="tipLetter" type="button">ビットからの手紙を読む</button></div>
   <div class="acts"><button class="btn" id="tipClose" type="button">閉じる</button></div>
 </div></div>
 <div class="modal" id="letterM" role="dialog" aria-modal="true" aria-labelledby="letterT"><div class="sheet letter">
