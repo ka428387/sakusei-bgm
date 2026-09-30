@@ -172,6 +172,22 @@
     check('地層が描かれている', $q('#strata').children.length > 3, $q('#strata').children.length);
     check('Web版には祝い旗が出ない', !$q('.bunting'), '購入の部品がないのに祝い旗がある');
 
+    // ── 通りがかりの人：「温泉掘ってるんけ？」→「いや、井戸っす」。1本で1回、止まっているあいだは出ず、掘る処理には触れない ──
+    const talkOn = id => getComputedStyle($q(id)).opacity === '1';
+    check('通りがかりの吹き出しは、最初は見えていない', !talkOn('#talkA') && !talkOn('#talkB'));
+    check('吹き出しの文言', $q('#talkA').textContent === '温泉掘ってるんけ？' && $q('#talkB').textContent === 'いや、井戸っす', $q('#talkA').textContent + ' / ' + $q('#talkB').textContent);
+    passerWill = true; passerFire(); await wait(700);
+    check('止まっているあいだは出ない', !talkOn('#talkA'), '掘っていないのに吹き出しが出た');
+    running = true; passerWill = true; passerFire(); await wait(700);
+    check('掘っていると、先に通りがかりの人が話しかける', talkOn('#talkA') && !talkOn('#talkB'), `A ${talkOn('#talkA')} B ${talkOn('#talkB')}`);
+    await wait(2300);
+    check('すこし間をおいて、現場が「いや、井戸っす」と返す', talkOn('#talkA') && talkOn('#talkB'), `A ${talkOn('#talkA')} B ${talkOn('#talkB')}`);
+    await wait(4400);
+    check('数秒で消える', !talkOn('#talkA') && !talkOn('#talkB'), `A ${talkOn('#talkA')} B ${talkOn('#talkB')}`);
+    passerArm();
+    check('1本の井戸で1回だけ（次は待たない）', passerTO === 0 && !passerWill, `timer ${passerTO}`);
+    running = false; passerReset();
+
     // ── 絵：読み込み・質感・二重表示なし ──
     const artSel = ROT ? '#rig' : '#derrick', art = $q(artSel);
     check('機械の絵が読み込まれている', await until(() => art.complete && art.naturalWidth > 0, 4000), art.currentSrc);

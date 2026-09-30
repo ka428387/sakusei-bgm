@@ -156,6 +156,12 @@
   .scar .lostbit{position:absolute;bottom:1px;left:1px;width:12px;height:13px;opacity:.9;
     background:linear-gradient(180deg,#A99C86,#6B5F4F);
     clip-path:polygon(0 0,100% 0,100% 55%,50% 100%,0 55%)}
+  .talk{position:absolute;pointer-events:none;max-width:62%;padding:7px 12px;border-radius:9px;
+    font-size:13px;font-weight:700;line-height:1.5;color:#F4EFDF;background:rgba(9,32,46,.92);
+    border:1px solid #64808A;opacity:0;transition:opacity .45s}
+  .talk.on{opacity:1}
+  #talkA{left:10px;top:12%}
+  #talkB{left:44px;top:calc(12% + 46px);border-color:#C47D47;color:#F0B06A}
   .log.quake{animation:quake .5s linear}
   @keyframes quake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
 
@@ -278,6 +284,8 @@
   </div>
   <div class="flash" id="flash"></div>
   <div class="shout mincho" id="shout">出　水</div>
+  <div class="talk" id="talkA" aria-hidden="true">温泉掘ってるんけ？</div>
+  <div class="talk" id="talkB" aria-hidden="true">いや、井戸っす</div>
   <div class="jarui" id="jarui">
     <div class="t">ビットが喰われました ── ジャーリングで抜いてください</div>
     <div class="bar"><i id="jarfill"></i></div>
@@ -812,11 +820,31 @@ function finish(){
     if(running || (Math.abs(waterLvl-G.swl)<=0.15 && --n<=0)) clearInterval(settleId);
   },50);
 }
+/* ───────── 通りがかりの人（1本の井戸で、たまに1回だけ。掘る処理には触れない） ───────── */
+let passerWill=Math.random()<.6, passerTO=0, passerT2=0, passerT3=0;
+function passerArm(){
+  if(!passerWill||passerTO) return;
+  passerTO=setTimeout(passerFire,(25+Math.random()*35)*1000);
+}
+function passerFire(){
+  passerTO=0;
+  if(!running||done) return;                       // 止まっているあいだは出さない（再開でまた待つ）
+  if(trouble){ passerTO=setTimeout(passerFire,8000); return; }
+  passerWill=false;
+  $('#talkA').classList.add('on');
+  passerT2=setTimeout(()=>$('#talkB').classList.add('on'),2400);
+  passerT3=setTimeout(()=>{ $('#talkA').classList.remove('on'); $('#talkB').classList.remove('on'); },7000);
+}
+function passerReset(){
+  clearTimeout(passerTO); clearTimeout(passerT2); clearTimeout(passerT3); passerTO=0;
+  $('#talkA').classList.remove('on'); $('#talkB').classList.remove('on');
+  passerWill=Math.random()<.6;
+}
 function draw(){ if(!running) return; paint(); rafId=requestAnimationFrame(draw); }
 function startLoop(){
   clearInterval(schedId);
   schedId=setInterval(schedule,25);
-  schedule(); draw();
+  schedule(); draw(); passerArm();
 }
 function stopLoop(suspendDelay){
   clearInterval(schedId); cancelAnimationFrame(rafId);
@@ -848,7 +876,7 @@ $('#pump').onclick=()=>{
 };
 $('#jar').onclick=jab;
 $('#reset').onclick=()=>{
-  stopAmbient();
+  stopAmbient(); passerReset();
   running=false; stopLoop(); depth=0; struck=false; done=false; cur=null; step=0;
   warnMsg=null; casingFull=false;
   trouble=null; scarCount=0; redrillTo=0; knownTo=0; lastTroubleT=-99;
