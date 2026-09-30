@@ -1,7 +1,7 @@
 /* 井戸ビート Service Worker
    静的ファイルだけの構成なので、初回に全部キャッシュしてオフラインで動くようにする。
    取り出しは cache-first、裏で取り直して次回起動時に新しくなる（stale-while-revalidate）。 */
-const CACHE = 'sakusei-bgm-v8';
+const CACHE = 'sakusei-bgm-v9';
 
 const ASSETS = [
   './',
@@ -13,6 +13,9 @@ const ASSETS = [
   './manifest.webmanifest',
   './rotary/manifest.webmanifest',
   './percussion/manifest.webmanifest',
+  './art/fonts/fonts.css',
+  './art/fonts/noto-sans-jp-core.woff2',
+  './art/fonts/dela-gothic-one.woff2',
   './art/sky-morning.jpg',
   './art/soil.jpg',
   './art/gravel.jpg',

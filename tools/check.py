@@ -37,6 +37,14 @@ def ng(msg, detail=''):
 def git(*a, cwd=REPO):
     return subprocess.run(['git', *a], cwd=cwd, capture_output=True, text=True).stdout
 
+def displayed_chars(html):
+    """ページの中で、画面に出る可能性のある、ASCII 以外の文字（コメント・meta・title は除く）。書体に入っているかの確認に使う"""
+    h = re.sub(r'<!--.*?-->', '', html, flags=re.S)
+    h = re.sub(r'/\*.*?\*/', '', h, flags=re.S)
+    h = re.sub(r'(?<![:"\'\w])//[^\n]*', '', h)
+    h = re.sub(r'<meta[^>]*>|<link[^>]*>|<title>.*?</title>', '', h, flags=re.S)
+    return {c for c in h if ord(c) > 0x7e}
+
 def read(root, rel):
     return open(os.path.join(root, rel), encoding='utf-8').read()
 
@@ -92,12 +100,34 @@ def check_files(root):
             p = norm(d, r)
             need.add(p)
             if p != 'sw.js': offline.add(p)
+    # 書体（CSS の中の url()）。核（core）とロゴ用はオフラインでも要る。extra は使う文字が出たときだけ読むので、一覧には入れなくてよい（アプリには全部入る）
+    for css in sorted(p for p in offline if p.endswith('.css') and os.path.exists(os.path.join(root, p))):
+        for r in re.findall(r"url\(['\"]?([^'\")]+)['\"]?\)", read(root, css)):
+            if r.startswith(('http:', 'https:', 'data:')): continue
+            p = norm(os.path.dirname(css), r)
+            need.add(p)
+            if not os.path.basename(p).startswith('noto-sans-jp-extra'): offline.add(p)
     missing = sorted(p for p in need if not os.path.exists(os.path.join(root, p)))
     if missing: ng('読み込むファイルが見つからない', ', '.join(missing))
     else: ok(f'読み込むファイルがすべてそろっている（{len(need)}個）')
     unlisted = sorted(p for p in offline if p not in listed)
     if unlisted: ng('オフライン用の一覧（sw.js）に入っていないファイルがある', ', '.join(unlisted))
     else: ok('オフライン用の一覧（sw.js）に、ページ・画像・アイコンがすべて入っている')
+
+def check_fonts(root):
+    """画面に出る文字がすべて書体（核）に入っているか。入っていないと、その文字だけ別の書体になる"""
+    core_path = os.path.join(root, 'tools', 'font-core-chars.txt')
+    if not os.path.exists(core_path):
+        ng('書体の文字表（tools/font-core-chars.txt）がない', 'python3 tools/make-fonts.py で作る'); return
+    core = set(read(root, 'tools/font-core-chars.txt'))
+    lack = {}
+    for page in PAGES:
+        for c in displayed_chars(read(root, page)):
+            if c not in core: lack.setdefault(c, page)
+    if lack:
+        ng('書体に入っていない文字がある', ' '.join(f'{c}({pg})' for c, pg in sorted(lack.items())) + '　→ python3 tools/make-fonts.py で作り直す')
+    else:
+        ok(f'画面に出る文字は、すべて書体に入っている（{len(core)}文字）')
 
 def check_markers(root):
     bad = []
@@ -243,7 +273,7 @@ def main():
     label = a.commit or 'いまのフォルダ'
     print(f'\n■ 井戸ビート 公開前チェック（{label}）\n\n1段目：ファイルの点検')
     check_syntax(root)
-    check_files(root); check_markers(root); check_authors(base, a.commit); check_cache_bump(root, base, a.commit)
+    check_files(root); check_fonts(root); check_markers(root); check_authors(base, a.commit); check_cache_bump(root, base, a.commit)
     if not a.quick:
         if any(f.startswith('構文エラー') for f in failures):
             print('\n2段目：構文エラーがあるので動作テストは省略')

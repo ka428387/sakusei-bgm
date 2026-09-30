@@ -37,11 +37,54 @@
     else if (PAGE === 'トップ（アプリ）') await testNativeTop();
     else if (NATIVE) await testNativeDrill();
     else await testDrill();
+    if (!NATIVE) await testType();
   } catch (e) {
     check('テストの途中で止まった', false, (e && e.stack) || e);
   }
   check('JavaScript のエラーが出ていない', !window.__errs.length, window.__errs.join(' / '));
   await fetch('/__result', { method: 'POST', body: JSON.stringify({ page: PAGE, results: R }) });
+
+  // 書体と文字の収まり：ページを新しい枠で開き直し、書体が読み込まれ、スマホの幅で文字が切れたり折り返したりしないか
+  async function testType() {
+    for (const w of [375, 390, 430]) {
+      const h = w === 430 ? 739 : 664;
+      const f = document.createElement('iframe');
+      f.style.cssText = `position:fixed;left:0;top:0;width:${w}px;height:${h}px;border:0;z-index:99`; f.src = 'index.html?frame';
+      document.body.appendChild(f);
+      await new Promise(r => f.onload = r);
+      const d = f.contentDocument, tag = `${w}px幅の画面で`;
+      await d.fonts.ready; await wait(300);
+      const loaded = fam => [...d.fonts].some(ff => ff.family.replace(/"/g, '') === fam && ff.status === 'loaded');
+      if (w === 375) {
+        check('書体が読み込まれている（Dela Gothic One・Noto Sans JP）', loaded('Dela Gothic One') && loaded('Noto Sans JP'),
+          [...d.fonts].map(ff => ff.family + ':' + ff.status).join(' '));
+        check('ロゴは Dela Gothic One、本文は Noto Sans JP を指定している',
+          /^"?Dela Gothic One/.test(f.contentWindow.getComputedStyle(d.querySelector('h1')).fontFamily) &&
+            /^"?Noto Sans JP/.test(f.contentWindow.getComputedStyle(d.body).fontFamily),
+          `h1 ${f.contentWindow.getComputedStyle(d.querySelector('h1')).fontFamily} / body ${f.contentWindow.getComputedStyle(d.body).fontFamily}`);
+        check('明朝体の指定が残っていない', ![...d.querySelectorAll('*')].some(e => /Mincho|serif/i.test(f.contentWindow.getComputedStyle(e).fontFamily.replace(/sans-serif/g, ''))),
+          'serif / Mincho の指定が残っている');
+      }
+      const vis = e => e.getClientRects().length > 0 && f.contentWindow.getComputedStyle(e).visibility !== 'hidden';
+      check(tag + '横にはみ出さない', d.documentElement.scrollWidth <= w, `幅 ${d.documentElement.scrollWidth}px`);
+      const sideOut = [], clipped = [], wrapped = [];
+      for (const e of d.querySelectorAll('h1,h2,button,a.card,.home,.sub,.tick span,.layer .nm,.readout,.status,.knob label,.hint,.tipbtn,.foot')) {
+        if (!vis(e)) continue;
+        const r = e.getBoundingClientRect(), cs = f.contentWindow.getComputedStyle(e), name = (e.id || e.className || e.tagName) + '「' + e.textContent.trim().slice(0, 10) + '」';
+        if (r.left < -0.5 || r.right > w + 0.5) sideOut.push(name);
+        if (cs.overflow !== 'visible' && e.scrollWidth > e.clientWidth + 1 && !/^(ellipsis)$/.test(cs.textOverflow)) clipped.push(name);
+        if (e.matches('h1,button,.home,.tipbtn,.layer .nm,.tick span')) {          // 1行で収めたいもの
+          const rg = d.createRange(); rg.selectNodeContents(e);
+          const tops = [...new Set([...rg.getClientRects()].filter(q => q.width > 0).map(q => Math.round(q.top / 4)))];
+          if (tops.length > 1) wrapped.push(name);
+        }
+      }
+      check(tag + '画面の外へ出る部品がない', !sideOut.length, sideOut.join(' / '));
+      check(tag + '文字が枠で切れていない', !clipped.length, clipped.join(' / '));
+      check(tag + 'ロゴ・ボタン・地層名が折り返さない', !wrapped.length, wrapped.join(' / '));
+      f.remove();
+    }
+  }
 
   async function testTop() {
     const cards = [...document.querySelectorAll('a.card')];

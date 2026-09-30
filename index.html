@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>井戸ビート</title>
 <meta name="description" content="井戸を掘ると、地層が音楽になる。ロータリー式とパーカッション式、2つの掘り方でブラウザ上に井戸を掘るBGM生成器。">
-<meta name="theme-color" content="#1C1713">
+<meta name="theme-color" content="#0D2B3B">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/top-180.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -29,15 +29,16 @@
 <meta name="twitter:description" content="井戸を掘ると、地層が音楽になる。回転で削るか、綱で落として砕くか。">
 <meta name="twitter:image" content="https://ka428387.github.io/sakusei-bgm/og.png">
 
+<link rel="stylesheet" href="art/fonts/fonts.css">
 <style>
   :root{
-    --ink:#1C1713; --paper:#E8E2D6; --line:#3A322A;
-    --rust:#9C4A22; --steel:#3E7FB5; --spring:#69C6DE; --dim:#8A8073;
+    --ink:#0D2B3B; --paper:#F4EFDF; --line:#36505A;
+    --rust:#C47D47; --steel:#3E7FB5; --spring:#69C6DE; --dim:#8FA9AE;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
     background:var(--ink);color:var(--paper);
-    font-family:"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+    font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;font-weight:500;
     -webkit-font-smoothing:antialiased;
     line-height:1.7;
     min-height:100vh;min-height:100dvh;          /* 既定の表示はスクロールなしで収める */
@@ -48,10 +49,10 @@
 
   header{flex:none;padding:20px 2px 14px}
   h1{
-    font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
-    font-size:clamp(22px,5.8vw,38px);font-weight:600;letter-spacing:.12em;line-height:1.3;
+    font-family:"Dela Gothic One","Noto Sans JP","Hiragino Sans",sans-serif;
+    font-size:clamp(28px,8vw,46px);font-weight:400;font-synthesis:none;letter-spacing:-.045em;line-height:1.25;
   }
-  header p{margin-top:8px;color:#BDB3A3;font-size:clamp(12.5px,3.2vw,15px);letter-spacing:.03em}
+  header p{text-wrap:balance;margin-top:8px;color:#C6D8DB;font-size:clamp(12.5px,3.2vw,15px);letter-spacing:.03em}
   header .note{margin-top:4px;color:var(--dim);font-size:11px}
 
   /* ── 工法の選択：2枚で残りの高さを分け合う ── */
@@ -61,7 +62,7 @@
     display:flex;flex-direction:column;justify-content:flex-end;
     text-decoration:none;color:inherit;
     border:1px solid var(--line);border-radius:3px;
-    background:#171310;
+    background:#0F2E40;
     background-size:cover;background-position:top center;background-repeat:no-repeat;
     transition:border-color .18s,transform .18s;
   }
@@ -70,69 +71,68 @@
   .card.per{background-image:url(screenshot-percussion.jpg);background-position:top center}
   .card::before{                                  /* 上の絵は見せ、文字の背後だけ沈める */
     content:"";position:absolute;inset:0;
-    background:linear-gradient(180deg,rgba(18,14,11,0) 0%,rgba(18,14,11,.20) 31%,rgba(18,14,11,.80) 55%,rgba(18,14,11,.97) 82%);
+    background:linear-gradient(180deg,rgba(9,32,46,0) 0%,rgba(9,32,46,.20) 31%,rgba(9,32,46,.82) 55%,rgba(9,32,46,.97) 82%);
   }
   .card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;opacity:.82}
   .card.rot::after{background:linear-gradient(90deg,#A75C34,transparent 58%)}
   .card.per::after{background:linear-gradient(90deg,#3979A9,transparent 58%)}
-  .card:hover,.card:focus-visible{border-color:#6B5D4E;transform:translateY(-2px)}
+  .card:hover,.card:focus-visible{border-color:#64808A;transform:translateY(-2px)}
   .card:focus-visible{outline:2px solid var(--spring);outline-offset:3px}
 
   .card .body{position:relative;padding:14px 16px 15px}
   .kind{display:inline-flex;align-items:center;width:max-content;padding:2px 6px 2px 8px;margin-bottom:7px;
-    border:1px solid currentColor;background:rgba(17,14,12,.62);font-size:9px;letter-spacing:.28em;line-height:1.45}
-  .card.rot .kind{color:#E0916A}
-  .card.per .kind{color:#8FBEE0}
+    border:1px solid currentColor;background:rgba(9,32,46,.66);font-size:9px;letter-spacing:.28em;line-height:1.45}
+  .card.rot .kind{color:#EBA672}
+  .card.per .kind{color:#9CC8E8}
   .card h2{
-    font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
-    font-size:clamp(18px,4.8vw,24px);font-weight:600;letter-spacing:.1em;margin-bottom:6px;
+    font-size:clamp(18px,4.8vw,24px);font-weight:700;letter-spacing:.04em;margin-bottom:6px;
   }
-  .card p{font-size:clamp(11.5px,3vw,13.5px);color:#CFC6B6;line-height:1.7}
+  .k{display:inline-block}
+  .card p{text-wrap:balance;font-size:clamp(11.5px,3vw,13.5px);color:#DCE6E4;line-height:1.7}
   .meta{
     display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 14px;margin-top:9px;
-    font-size:11px;color:#A9A093;font-variant-numeric:tabular-nums;
+    font-size:11px;color:#B5C8CB;font-variant-numeric:tabular-nums;
   }
   .meta .go{margin-left:auto;padding-left:12px;border-left:1px solid currentColor;
     font-size:12.5px;letter-spacing:.1em;white-space:nowrap}
-  .card.rot .go{color:#E0916A}
-  .card.per .go{color:#8FBEE0}
+  .card.rot .go{color:#EBA672}
+  .card.per .go{color:#9CC8E8}
 
   /* ── 足もと。しくみは既定でたたんでおく ── */
-  .foot{flex:none;font-size:11.5px;color:#8A8073}
-  .foot a{color:#A99C86}
-  .foot summary{cursor:pointer;color:#A99C86;list-style:none;display:inline-block;padding:2px 0}
+  .foot{flex:none;font-size:11.5px;color:#8FA9AE}
+  .foot a{color:#9DB8BC}
+  .foot summary{cursor:pointer;color:#9DB8BC;list-style:none;display:inline-block;padding:2px 0}
   .foot summary::-webkit-details-marker{display:none}
   .foot summary::before{content:"＋ ";color:var(--dim)}
   .foot details[open] summary::before{content:"− "}
-  .foot .about{padding:8px 0 2px;line-height:1.95;color:#A9A093;max-width:64ch}
-  .foot .about b{color:#CFC6B6;font-weight:500}
+  .foot .about{padding:8px 0 2px;line-height:1.95;color:#B5C8CB;max-width:64ch}
+  .foot .about b{color:#F4EFDF;font-weight:700}
   .foot .end{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;
-    font-size:11px;color:#6E6558;letter-spacing:.04em}
+    font-size:11px;color:#7A9499;letter-spacing:.04em}
   [hidden]{display:none!important}                     /* 指定した表示方法（flex など）に負けて、隠したものが見えてしまわないように */
   .tipbtn{margin-left:auto;font:inherit;font-size:12.5px;letter-spacing:.12em;padding:7px 12px;cursor:pointer;
-    color:#E0916A;background:transparent;border:1px solid #7A4A2A;border-radius:2px}
-  .tipbtn:hover{border-color:#B06A3E}
+    color:#EBA672;background:transparent;border:1px solid #C47D47;border-radius:9px;font-weight:700}
+  .tipbtn:hover{border-color:#E3A26C}
   .tipbtn:focus-visible,.sheet .btn:focus-visible{outline:2px solid var(--spring);outline-offset:2px}
 
   /* ── 応援（投げ銭）の画面。iPhoneアプリの中だけで開く ── */
   .modal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;
-    padding:20px;background:rgba(10,8,6,.78)}
+    padding:20px;background:rgba(4,16,24,.82)}
   .modal.on{display:flex}
   .sheet{width:100%;max-width:420px;max-height:calc(100dvh - 40px);overflow:auto;
-    background:#171310;border:1px solid #4A4238;border-radius:3px;padding:22px 20px 18px}
-  .sheet h3{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:19px;font-weight:600;
-    letter-spacing:.1em;margin-bottom:12px}
-  .sheet p{font-size:13.5px;line-height:1.9;color:#CFC6B6}
-  .sheet small{display:block;margin-top:6px;font-size:11.5px;line-height:1.8;color:#A2988A}
+    background:#0D2B3B;border:1px solid #36505A;border-radius:9px;padding:22px 20px 18px}
+  .sheet h3{font-size:19px;font-weight:700;letter-spacing:.06em;margin-bottom:12px}
+  .sheet p{font-size:13.5px;line-height:1.9;color:#DCE6E4}
+  .sheet small{display:block;margin-top:6px;font-size:11.5px;line-height:1.8;color:#B5C8CB}
   .sheet .acts{display:flex;flex-direction:column;gap:8px;margin-top:14px}
   .sheet .btn{font:inherit;font-size:14px;letter-spacing:.12em;padding:12px 8px;cursor:pointer;
-    color:var(--paper);background:transparent;border:1px solid #5C5145;border-radius:2px}
+    color:var(--paper);background:transparent;border:1px solid #64808A;border-radius:9px;font-weight:700}
   .sheet .btn:disabled{opacity:.4;cursor:default}
-  .sheet.letter p{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:14.5px;line-height:2.05}
+  .sheet.letter p{font-size:14px;line-height:2.05}
   .sheet.letter .sign{margin-top:10px;text-align:right;letter-spacing:.12em}
   .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);
     z-index:40;width:max-content;max-width:calc(100% - 40px);padding:10px 16px;font-size:13px;color:var(--paper);
-    background:#2A241E;border:1px solid #5C5145;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .25s}
+    background:#16394B;border:1px solid #64808A;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .25s}
   .toast.on{opacity:1}
 
   @media (min-width:720px){
@@ -154,7 +154,7 @@
 
   <header>
     <h1>井戸ビート</h1>
-    <p>井戸を掘ると、地層が音楽になる。掘り方を選んでください。</p>
+    <p><span class="k">井戸を掘ると、</span><span class="k">地層が音楽になる。</span><span class="k">掘り方を</span><span class="k">選んでください。</span></p>
     <p class="note">音が出ます。音源ファイルは使わず、その場で合成しています。</p>
   </header>
 
@@ -164,7 +164,7 @@
       <div class="body">
         <div class="kind">ROTARY</div>
         <h2>ロータリー編</h2>
-        <p>ビットを回して削る。泥水を循環させて孔壁を保ちながら、岩盤の奥の破砕帯まで掘り下げます。</p>
+        <p><span class="k">ビットを回して削る。</span><span class="k">泥水を循環させて</span><span class="k">孔壁を保ちながら、</span><span class="k">岩盤の奥の破砕帯まで</span><span class="k">掘り下げます。</span></p>
         <div class="meta">
           <span>深さ 130〜180m</span>
           <span>時間 約5,000倍</span>
@@ -177,7 +177,7 @@
       <div class="body">
         <div class="kind">PERCUSSION</div>
         <h2>パーカッション編</h2>
-        <p>綱で吊った工具を落として砕く、昔ながらの綱掘り。掘りカスはベーラーでさらい、その間が間奏になります。</p>
+        <p><span class="k">綱で吊った工具を</span><span class="k">落として砕く、</span><span class="k">昔ながらの綱掘り。</span><span class="k">掘りカスは</span><span class="k">ベーラーでさらい、</span><span class="k">その間が</span><span class="k">間奏になります。</span></p>
         <div class="meta">
           <span>深さ 30〜70m</span>
           <span>時間 約1,000倍</span>
