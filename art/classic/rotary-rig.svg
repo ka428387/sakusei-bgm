@@ -1,0 +1,22 @@
+<!-- 井戸ビートの旧アート（2026-09-30 まで）。ページからは使っていない。 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 178 146" fill="none">
+      <path d="M26 142 L68 10 M132 142 L91 10" stroke="#26292A" stroke-width="7" stroke-linecap="round"/>
+      <path d="M29 142 L70 10 M129 142 L89 10" stroke="#98522F" stroke-width="2.4" stroke-linecap="round" opacity=".92"/>
+      <path d="M72 8 L72 139 M88 8 L88 139" stroke="#43484A" stroke-width="5"/>
+      <path d="M74 8 L74 139 M86 8 L86 139" stroke="#B16A3C" stroke-width="1.5" opacity=".78"/>
+      <g stroke="#6B4B37" stroke-width="1.8" opacity=".95">
+        <path d="M72 22H88 M72 42H88 M72 62H88 M72 82H88 M72 102H88 M72 122H88"/>
+        <path d="M72 22L88 42 M88 22L72 42 M72 62L88 82 M88 62L72 82 M72 102L88 122 M88 102L72 122"/>
+      </g>
+      <rect x="64" y="50" width="32" height="24" rx="2" fill="#303638" stroke="#A45D34" stroke-width="1.8"/>
+      <rect x="69" y="55" width="22" height="9" fill="#565A56"/>
+      <circle cx="80" cy="68" r="3" fill="#181A19" stroke="#AA704A"/>
+      <path d="M80 74V144" stroke="#B9AD95" stroke-width="4"/>
+      <path d="M80 74V144" stroke="#534B40" stroke-width="1"/>
+      <path d="M95 58 C126 58 122 87 151 92 C163 94 166 106 163 119" stroke="#252727" stroke-width="5" stroke-linecap="round"/>
+      <path d="M95 58 C126 58 122 87 151 92 C163 94 166 106 163 119" stroke="#7F5438" stroke-width="1.5" stroke-linecap="round" opacity=".8"/>
+      <path d="M17 140H143" stroke="#292B29" stroke-width="8"/>
+      <path d="M17 137H143" stroke="#9C5A34" stroke-width="2"/>
+      <rect x="104" y="116" width="39" height="21" fill="#282D2D" stroke="#6D503D" stroke-width="1.5"/>
+      <circle cx="115" cy="126" r="5" fill="#171919" stroke="#8C7259"/>
+    </svg>

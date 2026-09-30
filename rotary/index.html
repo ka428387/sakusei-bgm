@@ -80,24 +80,12 @@
     background:#12100E;
   }
   .stack{position:absolute;left:0;right:0;top:0;will-change:transform}
-  /* ロータリー式の地上設備。パーカッション編とは錆橙と黒鉄で描き分ける */
-  .sky{position:absolute;left:0;right:0;top:-150px;height:150px;
-    background:
-      linear-gradient(180deg,rgba(11,16,21,.15),rgba(11,12,12,.05) 68%,rgba(33,35,30,.95) 100%),
-      linear-gradient(180deg,#18222B 0%,#303D43 58%,#665447 91%,#282A24 100%)}
-  .rotary-rig{position:absolute;top:-142px;left:calc(46px + 34% - 68px + var(--hx,0px));
-    width:178px;height:146px;pointer-events:none;transition:left .9s ease;
-    filter:drop-shadow(0 4px 5px rgba(0,0,0,.38))}
-  .mud-pit{position:absolute;top:-22px;left:calc(46px + 34% + 92px + var(--hx,0px));
-    width:72px;height:18px;pointer-events:none;transition:left .9s ease;
-    border:1px solid rgba(104,83,61,.9);border-top-color:#806344;
-    background:linear-gradient(180deg,rgba(86,73,56,.48),rgba(35,31,26,.92));
-    box-shadow:inset 0 4px 0 rgba(87,100,72,.34),0 3px 5px rgba(0,0,0,.35)}
-  .mud-pit::before{content:"";position:absolute;left:5px;right:5px;top:3px;height:3px;
-    background:linear-gradient(90deg,transparent,rgba(154,141,96,.42),transparent)}
-  .mud-pit::after{content:"";position:absolute;left:-53px;top:-12px;width:56px;height:18px;
-    border-top:2px solid #81573A;border-right:2px solid #81573A;border-radius:0 12px 0 0;
-    transform:rotate(-4deg);transform-origin:right bottom;opacity:.82}
+  /* 地表と空（朝）。空の画像の下端が地表、下の約4%が草地。地表と一緒に動く */
+  .sky{position:absolute;left:0;right:0;top:-340px;height:340px;
+    background:#77b8da url(../art/sky-morning.jpg) center bottom / cover no-repeat}
+  /* ロータリー機（泥水タンクとホースも絵の中）。画像の大きさ・位置は、fitRig() が下の RIG（実測したつなぎ目）から決める */
+  .rotary-rig{position:absolute;display:block;max-width:none;pointer-events:none;
+    -webkit-user-drag:none;transition:left .9s ease}
   .ruler{position:absolute;left:0;top:0;width:46px;bottom:0}
   .tick{position:absolute;left:0;width:46px;border-top:1px solid rgba(232,226,214,.16)}
   .tick.major{border-top-color:rgba(232,226,214,.42)}
@@ -105,17 +93,17 @@
     position:absolute;right:6px;top:-8px;font-size:10px;
     color:#9A9084;font-variant-numeric:tabular-nums;
   }
-  .strata{position:absolute;left:46px;right:0;top:0}
+  .strata{position:absolute;left:46px;right:0;top:0;box-shadow:0 -2px 0 #BF8D48}   /* 地表の線 */
   .layer{position:relative;width:100%}
   .layer::after{content:"";position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(90deg,rgba(255,255,255,.035),transparent 22%,rgba(0,0,0,.07) 72%,transparent);
     mix-blend-mode:soft-light}
-  .layer .nm{
-    position:absolute;left:10px;top:6px;
+  .layer .nm{                                      /* 質感の上でも読めるよう、濃紺の半透明の下地をつける */
+    position:absolute;left:10px;top:5px;padding:0 7px;border-radius:2px;
     font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
-    font-size:13px;letter-spacing:.22em;
-    color:rgba(255,250,240,.86);
-    text-shadow:0 1px 3px rgba(0,0,0,.55);
+    font-size:13px;line-height:18px;letter-spacing:.22em;
+    color:#F4EFE3;background:rgba(9,38,55,.66);
+    white-space:nowrap;
   }
   /* 掘削孔（depth追従）。--hx は現在の井戸の横位置で、孔を放棄するたび右へずれる */
   .hole{
@@ -188,14 +176,15 @@
     background:linear-gradient(90deg,#4A4238,#B6A88E,#4A4238);transition:left .9s ease;
   }
   .readout{
-    position:absolute;right:12px;text-align:right;top:-42px;
+    position:absolute;right:12px;text-align:right;top:-46px;
+    padding:7px 11px 6px;background:rgba(9,38,55,.9);border:1px solid rgba(255,255,255,.14);border-radius:6px;
   }
   .readout .d{
     font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
     font-size:34px;line-height:1;font-variant-numeric:tabular-nums;
-    text-shadow:0 2px 8px rgba(0,0,0,.8);
+    color:#F4EFE3;
   }
-  .readout .u{font-size:11px;color:#B9AE9C;letter-spacing:.1em}
+  .readout .u{font-size:11px;color:#C9D4D8;letter-spacing:.1em}
 
   .flash{
     position:absolute;inset:0;pointer-events:none;opacity:0;
@@ -272,28 +261,7 @@
 <div class="log" id="log">
   <div class="stack" id="stack">
     <div class="sky"></div>
-    <svg class="rotary-rig" aria-hidden="true" viewBox="0 0 178 146" fill="none">
-      <path d="M26 142 L68 10 M132 142 L91 10" stroke="#26292A" stroke-width="7" stroke-linecap="round"/>
-      <path d="M29 142 L70 10 M129 142 L89 10" stroke="#98522F" stroke-width="2.4" stroke-linecap="round" opacity=".92"/>
-      <path d="M72 8 L72 139 M88 8 L88 139" stroke="#43484A" stroke-width="5"/>
-      <path d="M74 8 L74 139 M86 8 L86 139" stroke="#B16A3C" stroke-width="1.5" opacity=".78"/>
-      <g stroke="#6B4B37" stroke-width="1.8" opacity=".95">
-        <path d="M72 22H88 M72 42H88 M72 62H88 M72 82H88 M72 102H88 M72 122H88"/>
-        <path d="M72 22L88 42 M88 22L72 42 M72 62L88 82 M88 62L72 82 M72 102L88 122 M88 102L72 122"/>
-      </g>
-      <rect x="64" y="50" width="32" height="24" rx="2" fill="#303638" stroke="#A45D34" stroke-width="1.8"/>
-      <rect x="69" y="55" width="22" height="9" fill="#565A56"/>
-      <circle cx="80" cy="68" r="3" fill="#181A19" stroke="#AA704A"/>
-      <path d="M80 74V144" stroke="#B9AD95" stroke-width="4"/>
-      <path d="M80 74V144" stroke="#534B40" stroke-width="1"/>
-      <path d="M95 58 C126 58 122 87 151 92 C163 94 166 106 163 119" stroke="#252727" stroke-width="5" stroke-linecap="round"/>
-      <path d="M95 58 C126 58 122 87 151 92 C163 94 166 106 163 119" stroke="#7F5438" stroke-width="1.5" stroke-linecap="round" opacity=".8"/>
-      <path d="M17 140H143" stroke="#292B29" stroke-width="8"/>
-      <path d="M17 137H143" stroke="#9C5A34" stroke-width="2"/>
-      <rect x="104" y="116" width="39" height="21" fill="#282D2D" stroke="#6D503D" stroke-width="1.5"/>
-      <circle cx="115" cy="126" r="5" fill="#171919" stroke="#8C7259"/>
-    </svg>
-    <div class="mud-pit" aria-hidden="true"></div>
+    <img class="rotary-rig" id="rig" src="../art/rotary-rig.webp" alt="" draggable="false">
     <div class="ruler" id="ruler"></div>
     <div class="strata" id="strata"></div>
     <div class="hole" id="hole"></div>
@@ -338,7 +306,12 @@
 <script>
 const PXM = 5;                       // 1m = 5px
 const SURF_CASING = 12;              // 表層ケーシング建て込み深さ m
-const RIG_SWIVEL = 68;               // 地表からリグの絵のスイベル下端までの高さ px（.rotary-rig の top:-142 と絵の y=74 から）
+/* ───────── 絵とのつなぎ目（朝のアートワーク）─────────
+   art/rotary-rig.webp を実測した値。x・y は、画像の左上を 0、幅・高さを 1 とした割合。
+   画像を差し替えたら測り直す（縦横比を変えて伸ばさない）。h は画面での高さ px。 */
+const RIG = {aspect:749/820, axis:.806, headY:.608, groundY:.981,                 // 掘削軸（レールのあいだ）、ヘッド下端（ロッドの始点）、接地線
+  hMin:70, hMax:200, ground:.38, headroom:12};                                    // 画面での高さ px の範囲。地表は、画面の上から 38% の位置
+let RIG_ROD = 0;   // 地表からヘッド下端までの高さ px（ロッドの上端）。リグの大きさから fitRig() が決める
 const $ = s => document.querySelector(s);
 
 /* ───────── 地層 ───────── */
@@ -358,6 +331,7 @@ function buildStrata(){
 }
 let G = buildStrata();
 
+// 旧アートの模様（朝のアートワークでは使っていない。旧アートに戻すときのために、そのまま残してある）
 const PATTERNS = {
   dot:  'radial-gradient(ellipse at 24% 42%,rgba(255,235,202,.25) 0 1px,transparent 1.5px),radial-gradient(ellipse at 71% 68%,rgba(55,36,23,.20) 0 1.2px,transparent 1.8px)',
   line: 'repeating-linear-gradient(178deg,rgba(20,18,15,.30) 0 1px,transparent 1px 8px),repeating-linear-gradient(182deg,transparent 0 17px,rgba(232,220,188,.08) 18px 19px,transparent 20px 31px)',
@@ -367,6 +341,39 @@ const PATTERNS = {
 };
 const PSIZE = {dot:'17px 13px,23px 19px',grain:'21px 17px,29px 23px,17px 31px',line:'auto',cross:'auto',wave:'auto'};
 
+/* リグの大きさを、画面に合わせる。地表は画面の上から 38% なので、頭が切れない高さにする（縦横比は変えない） */
+function fitRig(){
+  const H=$('#log').clientHeight, R=RIG;
+  R.h=Math.round(Math.max(R.hMin, Math.min(R.hMax, H*R.ground-R.headroom)));
+  R.w=R.h*R.aspect;
+  RIG_ROD=(R.groundY-R.headY)*R.h;
+  const rg=$('#rig');
+  rg.style.width=R.w+'px'; rg.style.height=R.h+'px';
+  rg.style.top=(-R.groundY*R.h)+'px';                          // 足が地表に立つ
+  rg.style.left='calc(46px + 34% + 12px + var(--hx,0px) - '+(R.axis*R.w)+'px)';   // 掘削軸をロッドの中心に
+  const b=document.querySelector('.bunting'); if(b){ b.remove(); hangBunting(); }   // 祝い旗も大きさを合わせて掛け直す
+}
+
+/* ───────── 地層の質感（朝のアートワーク：art/ の土・砂礫・岩の3枚）─────────
+   質感は3枚だけ。地層の見分けは、質感の上に地層ごとの色を重ねて行う（従来どおり）。
+   [質感, 重ねる色, 重ね方]。重ねる色が null なら質感そのまま。重ね方が null なら通常の重ね */
+const TEX = {soil:'url(../art/soil.jpg)', gravel:'url(../art/gravel.jpg)', rock:'url(../art/rock.jpg)'};
+const LAYER_ART = {
+  '表土':          ['soil',   null,        null],
+  'ローム層':      ['soil',   '#a64926b5', 'multiply'],
+  '粘土層':        ['soil',   '#69744aed', 'color'],
+  '砂れき層':      ['gravel', null,        null],
+  '泥岩':          ['rock',   null,        null],
+  '砂岩':          ['rock',   '#8c7860e0', 'color'],
+  '花こう岩':      ['rock',   '#b3aabdc4', 'multiply'],
+  '花こう岩破砕帯':['rock',   '#2f86a4d0', 'color'],
+};
+function layerBg(l){
+  const [tex, tint, mode] = LAYER_ART[l.n] || ['soil', null, null];
+  if(!tint) return {image:TEX[tex], size:'300px 300px', blend:'normal'};
+  return {image:'linear-gradient('+tint+','+tint+'),'+TEX[tex], size:'auto,300px 300px', blend:(mode||'normal')+',normal'};
+}
+
 function render(){
   const strata = $('#strata'), ruler = $('#ruler');
   strata.innerHTML=''; ruler.innerHTML='';
@@ -375,9 +382,9 @@ function render(){
     const d=document.createElement('div');
     d.className='layer';
     d.style.height=(l.to-top)*PXM+'px';
-    d.style.background=l.c;
-    d.style.backgroundImage=PATTERNS[l.p];
-    if(PSIZE[l.p]!=='auto') d.style.backgroundSize=PSIZE[l.p];
+    const bg=layerBg(l);
+    d.style.backgroundColor=l.c;              // 画像が読めなかったときの色
+    d.style.backgroundImage=bg.image; d.style.backgroundSize=bg.size; d.style.backgroundBlendMode=bg.blend;
     d.innerHTML='<span class="nm">'+l.n+'</span>';
     strata.appendChild(d);
     top=l.to;
@@ -391,6 +398,7 @@ function render(){
     if(m%20===0) t.innerHTML='<span>'+m+'</span>';
     ruler.appendChild(t);
   }
+  fitRig();
 }
 function layerAt(d){ return G.list.find(l=>d<l.to) || G.list[G.list.length-1]; }
 
@@ -409,7 +417,7 @@ function paint(){
   const line = $('#log').clientHeight*0.38;
   $('#stack').style.transform='translateY('+(line-depth*PXM)+'px)';
   $('#bitline').style.top=line+'px';
-  const rodLen=depth*PXM+RIG_SWIVEL;                        // ロッドはビットからスイベルまで
+  const rodLen=depth*PXM+RIG_ROD;                        // ロッドはビットからスイベルまで
   $('.bitline .rod').style.top=-rodLen+'px';
   $('.bitline .rod').style.height=rodLen+'px';
   $('#depth').textContent=depth.toFixed(1);
@@ -857,7 +865,7 @@ $('#rpm').oninput=e=>{ rpm=+e.target.value; $('#rpmV').textContent=rpm; };
 $('#mud').oninput=e=>{ mud=+e.target.value; $('#mudV').textContent=mud*5;
   if(ctx&&pumping&&running) waterG.gain.setTargetAtTime(mud/1400,ctx.currentTime,.2);
   if(ctx) wet.gain.setTargetAtTime(.18+mud/320,ctx.currentTime,.3); };
-addEventListener('resize',paint);
+addEventListener('resize',()=>{ fitRig(); paint(); });
 
 // 電話・Siri割り込み後は interrupted のまま自動復帰しないことがある
 document.addEventListener('visibilitychange',()=>{
@@ -866,26 +874,28 @@ document.addEventListener('visibilitychange',()=>{
 
 /* 応援してくれた人へのお礼：やぐらに祝いの旗を掛ける（見た目だけ）。
    応援の回数は iPhone アプリの記録から読む（IdoBeatStore）。Web版では何も起きない。 */
-function buntingSvg(w, h, strings) {                 // strings: [[始点], [終点], [たるみの制御点]] の紐を何本か
+function buntingSvg(w, h, strings) {                 // strings: [[始点], [終点], [たるみの制御点]]（px）の紐を何本か
   let s = '';
   strings.forEach(([a, b, c], si) => {
-    s += `<path d="M${a[0]} ${a[1]} Q${c[0]} ${c[1]} ${b[0]} ${b[1]}" stroke="#CBBFA9" stroke-width="1" opacity=".85"/>`;
-    const n = Math.round((b[0] - a[0]) / 12);
+    s += `<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)} Q${c[0].toFixed(1)} ${c[1].toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}" stroke="#F4EFE3" stroke-width="1" opacity=".9"/>`;
+    const k = RIG.h / 180, n = Math.max(3, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / (11 * k)));
     for (let i = 1; i < n; i++) {
       const t = i / n, u = 1 - t;
       const x = u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], y = u * u * a[1] + 2 * u * t * c[1] + t * t * b[1];
-      s += `<polygon class="flag" style="animation-delay:${(-((i * 7 + si * 3) % 11) * .33).toFixed(2)}s" fill="${(i + si) % 2 ? '#E9E1D2' : '#B5482A'}" points="${(x - 4.5).toFixed(1)},${y.toFixed(1)} ${(x + 4.5).toFixed(1)},${y.toFixed(1)} ${x.toFixed(1)},${(y + 10).toFixed(1)}"/>`;
+      s += `<polygon class="flag" style="animation-delay:${(-((i * 7 + si * 3) % 11) * .33).toFixed(2)}s" fill="${(i + si) % 2 ? '#F4EFE3' : '#B5482A'}" points="${(x - 4.5 * k).toFixed(1)},${y.toFixed(1)} ${(x + 4.5 * k).toFixed(1)},${y.toFixed(1)} ${x.toFixed(1)},${(y + 10 * k).toFixed(1)}"/>`;
     }
   });
   return `<svg class="bunting" aria-hidden="true" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none">${s}</svg>`;
 }
 function hangBunting() {
   if (document.querySelector('.bunting')) return;
-  // リグの2本の脚（図の x=52〜107 と 39〜119）のあいだに、2段の紐を渡す
-  document.querySelector('.rotary-rig').insertAdjacentHTML('afterend',
-    buntingSvg(178, 146, [[[52, 60], [107, 60], [80, 68]], [[39, 100], [119, 100], [79, 112]]]));
+  const w = RIG.w, h = RIG.h, P = (x, y) => [x * w, y * h];
+  // タンクの左上の角から、マストの左の縁へ、斜めに紐を渡す（位置は画像から測った割合）
+  document.getElementById('rig').insertAdjacentHTML('afterend',
+    buntingSvg(w, h, [[P(.115, .772), P(.648, .285), P(.34, .70)]]));
   const el = document.querySelector('.bunting');
-  el.style.top = '-142px'; el.style.left = 'calc(46px + 34% - 68px + var(--hx,0px))';   // リグと同じ場所
+  el.style.top = (-RIG.groundY * h) + 'px';
+  el.style.left = 'calc(46px + 34% + 12px + var(--hx,0px) - ' + (RIG.axis * w) + 'px)';   // リグと同じ場所
 }
 {
   const cap = window.Capacitor;

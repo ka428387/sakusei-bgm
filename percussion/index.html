@@ -81,13 +81,12 @@
   }
   .stack{position:absolute;left:0;right:0;top:0;will-change:transform}
 
-  /* 地表と空（夜明け前） */
-  .sky{position:absolute;left:0;right:0;top:-150px;height:150px;
-    background:
-      radial-gradient(ellipse at 72% 18%,rgba(128,157,185,.12),transparent 34%),
-      linear-gradient(180deg,#142238 0%,#2B4565 55%,#536E8D 91%,#252F24 100%)}
-  .derrick{position:absolute;top:-118px;pointer-events:none;transition:left .9s ease;
-    filter:drop-shadow(0 4px 4px rgba(0,0,0,.34))}
+  /* 地表と空（朝）。空の画像の下端が地表、下の約4%が草地。地表と一緒に動く */
+  .sky{position:absolute;left:0;right:0;top:-340px;height:340px;
+    background:#77b8da url(../art/sky-morning.jpg) center bottom / cover no-repeat}
+  /* 櫓。画像の大きさ・位置は、render() が下の DERRICK（実測したつなぎ目）から決める */
+  .derrick{position:absolute;display:block;max-width:none;pointer-events:none;
+    -webkit-user-drag:none;transition:left .9s ease}
   .pile{position:absolute;top:-150px;height:150px;
     display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
   .pile div{border-radius:5px 5px 0 0;box-shadow:0 1px 0 rgba(0,0,0,.45)}
@@ -99,17 +98,16 @@
     position:absolute;right:6px;top:-8px;font-size:10px;
     color:#9A9084;font-variant-numeric:tabular-nums;
   }
-  .strata{position:absolute;left:46px;right:0;top:0}
+  .strata{position:absolute;left:46px;right:0;top:0;box-shadow:0 -2px 0 #BF8D48}   /* 地表の線 */
   .layer{position:relative;width:100%}
   .layer::after{content:"";position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(90deg,rgba(255,255,255,.04),transparent 20%,rgba(0,0,0,.065) 72%,transparent);
     mix-blend-mode:soft-light}
-  .layer .nm{
-    position:absolute;left:10px;top:5px;
+  .layer .nm{                                      /* 質感の上でも読めるよう、濃紺の半透明の下地をつける */
+    position:absolute;left:10px;top:4px;padding:0 7px;border-radius:2px;
     font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
-    font-size:12.5px;letter-spacing:.2em;
-    color:rgba(255,250,240,.86);
-    text-shadow:0 1px 3px rgba(0,0,0,.55);
+    font-size:12.5px;line-height:18px;letter-spacing:.2em;
+    color:#F4EFE3;background:rgba(9,38,55,.66);
     white-space:nowrap;
   }
   /* 掘削孔・ケーシング・スライム・水 */
@@ -151,13 +149,14 @@
 
   .rule{position:absolute;left:46px;right:0;height:1px;background:rgba(255,140,60,.4);pointer-events:none}
 
-  .readout{position:absolute;right:12px;top:10px;text-align:right;pointer-events:none}
+  .readout{position:absolute;right:12px;top:10px;text-align:right;pointer-events:none;
+    padding:7px 11px 6px;background:rgba(9,38,55,.9);border:1px solid rgba(255,255,255,.14);border-radius:6px}
   .readout .d{
     font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
     font-size:34px;line-height:1;font-variant-numeric:tabular-nums;
-    text-shadow:0 2px 8px rgba(0,0,0,.8);
+    color:#F4EFE3;
   }
-  .readout .u{font-size:11px;color:#B9AE9C;letter-spacing:.1em}
+  .readout .u{font-size:11px;color:#C9D4D8;letter-spacing:.1em}
 
   .flash{position:absolute;inset:0;pointer-events:none;opacity:0;
     background:radial-gradient(circle at 50% 60%,rgba(140,225,245,.75),transparent 62%)}
@@ -243,49 +242,7 @@
 <div class="log" id="log">
   <div class="stack" id="stack">
     <div class="sky"></div>
-    <svg class="derrick" id="derrick" width="176" height="120" viewBox="0 0 176 120" fill="none">
-      <!-- 奥側の脚 -->
-      <path d="M34 118 L80 12" stroke="#2C557C" stroke-width="3.4" stroke-linecap="round"/>
-      <path d="M142 118 L96 12" stroke="#2C557C" stroke-width="3.4" stroke-linecap="round"/>
-      <!-- 手前の脚 -->
-      <path d="M10 118 L76 9" stroke="#3E7FB5" stroke-width="5" stroke-linecap="round"/>
-      <path d="M166 118 L100 9" stroke="#3E7FB5" stroke-width="5" stroke-linecap="round"/>
-      <!-- 脚の継ぎ足場 -->
-      <path d="M22 96 L44 96 M132 96 L154 96" stroke="#35648F" stroke-width="3"/>
-      <!-- マスト -->
-      <path d="M79 8 L79 114" stroke="#4585B8" stroke-width="4"/>
-      <path d="M97 8 L97 114" stroke="#4585B8" stroke-width="4"/>
-      <!-- 水平材とブレース -->
-      <g stroke="#3E76A8" stroke-width="1.8">
-        <path d="M79 20 L97 20 M79 36 L97 36 M79 52 L97 52 M79 68 L97 68 M79 84 L97 84 M79 100 L97 100"/>
-        <path d="M79 20 L97 36 M97 20 L79 36 M79 52 L97 68 M97 52 L79 68 M79 84 L97 100 M97 84 L79 100"/>
-        <path d="M79 36 L97 52 M97 36 L79 52 M79 68 L97 84 M97 68 L79 84"/>
-      </g>
-      <!-- はしご段 -->
-      <g stroke="#5D93BF" stroke-width="1.5">
-        <path d="M71 26 L79 26 M71 40 L79 40 M71 54 L79 54 M71 68 L79 68 M71 82 L79 82 M71 96 L79 96"/>
-      </g>
-      <!-- 錆 -->
-      <g stroke="#8A5A3A" stroke-width="2" opacity=".55" stroke-linecap="round">
-        <path d="M79 44 L79 49 M97 74 L97 78 M20 104 L23 99 M156 100 L153 95 M79 90 L79 93"/>
-      </g>
-      <!-- クラウンと滑車 -->
-      <rect x="72" y="2" width="32" height="9" fill="#2C557C" stroke="#3E7FB5" stroke-width="1.5"/>
-      <circle cx="88" cy="7" r="5.5" fill="#1A2733" stroke="#8C8272" stroke-width="1.6"/>
-      <circle cx="88" cy="7" r="2.1" fill="#303C49" stroke="#B19A7B" stroke-width=".8"/>
-      <!-- ウインチへのワイヤー -->
-      <path d="M91 10 C105 38 124 75 138 103" stroke="#8C8272" stroke-width="1.4"/>
-      <!-- ウインチ -->
-      <rect x="120" y="100" width="38" height="18" fill="#202B36" stroke="#35648F" stroke-width="1.5"/>
-      <circle cx="139" cy="107" r="6" fill="#33404E" stroke="#8C8272" stroke-width="1.5"/>
-      <circle cx="139" cy="107" r="2.3" fill="#171D22"/>
-      <path d="M128 103 C133 100 145 100 150 104 M128 107 C134 104 145 104 150 108 M128 111 C135 108 145 108 150 112" stroke="#746B5D" stroke-width=".75" opacity=".8"/>
-      <!-- クランプと足元の枕木 -->
-      <g fill="#7F684F" stroke="#29231E" stroke-width=".7">
-        <rect x="75" y="31" width="26" height="3" rx="1"/><rect x="75" y="63" width="26" height="3" rx="1"/><rect x="75" y="95" width="26" height="3" rx="1"/>
-      </g>
-      <path d="M2 117H57 M114 117H174" stroke="#4E3E2D" stroke-width="5"/><path d="M2 115H57 M114 115H174" stroke="#876A49" stroke-width="1.4"/>
-    </svg>
+    <img class="derrick" id="derrick" src="../art/percussion-derrick.webp" alt="" draggable="false">
     <div class="pile" id="pile"></div>
     <div class="ruler" id="ruler"></div>
     <div class="strata" id="strata"></div>
@@ -330,7 +287,12 @@
 <script>
 const PXM = 12;                // 1m = 12px（薄層の名前が読める縮尺）
 const SUB = 4;                 // 1打撃を4分割した音楽グリッド
-const CROWN_PX = -108;         // やぐらクラウン滑車のy（stack座標）
+/* ───────── 絵とのつなぎ目（朝のアートワーク）─────────
+   art/percussion-derrick.webp を実測した値。x・y は、画像の左上を 0、幅・高さを 1 とした割合。
+   画像を差し替えたら測り直す（縦横比を変えて伸ばさない）。h は画面での高さ px。 */
+const DERRICK = {aspect:676/900, axis:.488, sheaveY:.088, groundY:.977,           // 掘削軸、冠部の滑車、足の接地線
+  hMin:70, hMax:210, ground:.42, headroom:14};                                  // 画面での高さ px の範囲。最初の地表は、画面の上から 42% の位置
+let CROWN_PX = 0;   // ワイヤーを下ろす始点（地表を0とした y）。櫓の大きさから fitDerrick() が決める
 const SURF_CASING = 6;         // 表層ケーシング m
 const $ = s => document.querySelector(s);
 
@@ -380,6 +342,7 @@ function buildStrata(){
 }
 let G = buildStrata();
 
+// 旧アートの模様（朝のアートワークでは使っていない。旧アートに戻すときのために、そのまま残してある）
 const PATTERNS = {
   dot:  'radial-gradient(ellipse at 24% 42%,rgba(255,235,202,.25) 0 1px,transparent 1.5px),radial-gradient(ellipse at 71% 68%,rgba(55,36,23,.20) 0 1.2px,transparent 1.8px)',
   line: 'repeating-linear-gradient(178deg,rgba(20,18,15,.30) 0 1px,transparent 1px 8px),repeating-linear-gradient(182deg,transparent 0 17px,rgba(232,220,188,.08) 18px 19px,transparent 20px 31px)',
@@ -389,6 +352,41 @@ const PATTERNS = {
 };
 const PSIZE = {dot:'17px 13px,23px 19px',grain:'21px 17px,29px 23px,17px 31px',line:'auto',cross:'auto',wave:'auto'};
 
+/* ───────── 地層の質感（朝のアートワーク：art/ の土・砂礫・岩の3枚）─────────
+   質感は3枚だけ。地層の見分けは、質感の上に地層ごとの色を重ねて行う（従来どおり）。
+   [質感, 重ねる色, 重ね方]。重ねる色が null なら質感そのまま。重ね方が null なら通常の重ね */
+const TEX = {soil:'url(../art/soil.jpg)', gravel:'url(../art/gravel.jpg)', rock:'url(../art/rock.jpg)'};
+const LAYER_ART = {
+  '表土':        ['soil',   null,        null],
+  'ローム層':    ['soil',   '#a64926b5', 'multiply'],
+  '粘土層':      ['soil',   '#69744aed', 'color'],
+  'シルト層':    ['soil',   '#8d8768e6', 'color'],
+  '腐植土':      ['soil',   '#4b3624e0', 'multiply'],
+  '砂層':        ['soil',   '#cfae6ae6', 'color'],
+  '砂れき層':    ['gravel', null,        null],
+  '玉石混じり層':['gravel', '#8c8579b8', 'multiply'],
+  '泥岩':        ['rock',   null,        null],
+  '凝灰岩':      ['rock',   '#c9c6b833', null],
+};
+function layerBg(l, wet){                     // wet：帯水（出水したあとの砂れき層）は水色を重ねる
+  const [tex, tint, mode] = wet ? ['gravel', '#2b87a7c8', 'color'] : (LAYER_ART[l.n] || ['soil', null, null]);
+  if(!tint) return {image:TEX[tex], size:'300px 300px', blend:'normal'};
+  return {image:'linear-gradient('+tint+','+tint+'),'+TEX[tex], size:'auto,300px 300px', blend:(mode||'normal')+',normal'};
+}
+
+/* 櫓の大きさを、画面に合わせる。最初の地表は画面の上から 42% なので、頭が切れない高さにする（縦横比は変えない） */
+function fitDerrick(){
+  const H=$('#log').clientHeight, D=DERRICK;
+  D.h=Math.round(Math.max(D.hMin, Math.min(D.hMax, H*D.ground-D.headroom)));
+  D.w=D.h*D.aspect;
+  CROWN_PX=-(D.groundY-D.sheaveY)*D.h;
+  const dr=$('#derrick');
+  dr.style.width=D.w+'px'; dr.style.height=D.h+'px';
+  dr.style.top=(-D.groundY*D.h)+'px';                       // 足が地表に立つ
+  dr.style.left='calc(46px + 34% + 13px + var(--hx,0px) - '+(D.axis*D.w)+'px)';   // 掘削軸を孔の中心に
+  const b=document.querySelector('.bunting'); if(b){ b.remove(); hangBunting(); }   // 祝い旗も大きさを合わせて掛け直す
+}
+
 function render(){
   const strata=$('#strata'), ruler=$('#ruler');
   strata.innerHTML=''; ruler.innerHTML='';
@@ -397,11 +395,11 @@ function render(){
     const d=document.createElement('div');
     d.className='layer';
     d.style.height=(l.to-top)*PXM+'px';
-    d.style.background=l.c;
-    d.style.backgroundImage=PATTERNS[l.p];
-    if(PSIZE[l.p]!=='auto') d.style.backgroundSize=PSIZE[l.p];
+    const bg=layerBg(l);
+    d.style.backgroundColor=l.c;              // 画像が読めなかったときの色
+    d.style.backgroundImage=bg.image; d.style.backgroundSize=bg.size; d.style.backgroundBlendMode=bg.blend;
     if((l.to-top)>=2) d.innerHTML='<span class="nm">'+l.n+'</span>';
-    else { d.innerHTML='<span class="nm" style="font-size:10px;top:1px">'+l.n+'</span>'; }
+    else { d.innerHTML='<span class="nm" style="font-size:10px;top:0;line-height:12px;padding:0 5px">'+l.n+'</span>'; }
     strata.appendChild(d);
     top=l.to;
   });
@@ -415,9 +413,9 @@ function render(){
     if(m%5===0) t.innerHTML='<span>'+m+'</span>';
     ruler.appendChild(t);
   }
-  // やぐらは井戸とともに移る。掘りカスの山は現場に残るので動かさない
-  $('#derrick').style.left='calc(46px + 34% + 13px + var(--hx,0px) - 88px)';
-  $('#pile').style.left='calc(46px + 34% + 13px - 148px)';
+  // 櫓は井戸とともに移る（--hx）。掘りカスの山は現場に残るので動かさない
+  fitDerrick();
+  $('#pile').style.left='calc(46px + 34% + 13px - 172px)';
   $('#pile').style.width='96px';
 }
 function layerAt(d){ return G.list.find(l=>d<l.to) || G.list[G.list.length-1]; }
@@ -681,7 +679,8 @@ function strikeWater(t){
   $('#shout').classList.remove('on'); void $('#shout').offsetWidth; $('#shout').classList.add('on');
   setMsg('ベーラーが水を汲み上げました。出水です。');
   const el=$('#strata').children[G.aqIdx];
-  if(el){ el.style.background='#1F6E8C'; el.style.backgroundImage=PATTERNS.wave;
+  if(el){ const bg=layerBg(G.list[G.aqIdx], true);
+    el.style.backgroundColor='#1F6E8C'; el.style.backgroundImage=bg.image; el.style.backgroundSize=bg.size; el.style.backgroundBlendMode=bg.blend;
     const nm=el.querySelector('.nm'); if(nm) nm.textContent='砂れき層（帯水）'; }
   waterG.gain.setTargetAtTime(.05,t,.6);
   const s=ctx.createBufferSource(); s.buffer=noiseBuf;
@@ -1011,33 +1010,35 @@ $('#reset').onclick=()=>{
 };
 $('#bpm').oninput=e=>{ bpm=+e.target.value; $('#bpmV').textContent=bpm; };
 $('#stroke').oninput=e=>{ stroke=+e.target.value; $('#strokeV').textContent=stroke; };
-addEventListener('resize',paint);
+addEventListener('resize',()=>{ fitDerrick(); paint(); });
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden && (running||ambientId) && ctx) ctx.resume();
 });
 
 /* 応援してくれた人へのお礼：やぐらに祝いの旗を掛ける（見た目だけ）。
    応援の回数は iPhone アプリの記録から読む（IdoBeatStore）。Web版では何も起きない。 */
-function buntingSvg(w, h, strings) {                 // strings: [[始点], [終点], [たるみの制御点]] の紐を何本か
+function buntingSvg(w, h, strings) {                 // strings: [[始点], [終点], [たるみの制御点]]（px）の紐を何本か
   let s = '';
   strings.forEach(([a, b, c], si) => {
-    s += `<path d="M${a[0]} ${a[1]} Q${c[0]} ${c[1]} ${b[0]} ${b[1]}" stroke="#CBBFA9" stroke-width="1" opacity=".85"/>`;
-    const n = Math.round((b[0] - a[0]) / 12);
+    s += `<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)} Q${c[0].toFixed(1)} ${c[1].toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}" stroke="#F4EFE3" stroke-width="1" opacity=".9"/>`;
+    const k = DERRICK.h / 200, n = Math.max(3, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / (11 * k)));
     for (let i = 1; i < n; i++) {
       const t = i / n, u = 1 - t;
       const x = u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], y = u * u * a[1] + 2 * u * t * c[1] + t * t * b[1];
-      s += `<polygon class="flag" style="animation-delay:${(-((i * 7 + si * 3) % 11) * .33).toFixed(2)}s" fill="${(i + si) % 2 ? '#E9E1D2' : '#B5482A'}" points="${(x - 4.5).toFixed(1)},${y.toFixed(1)} ${(x + 4.5).toFixed(1)},${y.toFixed(1)} ${x.toFixed(1)},${(y + 10).toFixed(1)}"/>`;
+      s += `<polygon class="flag" style="animation-delay:${(-((i * 7 + si * 3) % 11) * .33).toFixed(2)}s" fill="${(i + si) % 2 ? '#F4EFE3' : '#B5482A'}" points="${(x - 4.5 * k).toFixed(1)},${y.toFixed(1)} ${(x + 4.5 * k).toFixed(1)},${y.toFixed(1)} ${x.toFixed(1)},${(y + 10 * k).toFixed(1)}"/>`;
     }
   });
   return `<svg class="bunting" aria-hidden="true" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none">${s}</svg>`;
 }
 function hangBunting() {
   if (document.querySelector('.bunting')) return;
-  // やぐらの2本の脚（図の x=46〜130 と 27〜149）のあいだに、2段の紐を渡す
+  const w = DERRICK.w, h = DERRICK.h, P = (x, y) => [x * w, y * h];
+  // 櫓の左右の脚のあいだに2段の紐を渡す（脚の内側の縁を、画像から測った割合）
   document.getElementById('derrick').insertAdjacentHTML('afterend',
-    buntingSvg(176, 120, [[[46, 58], [130, 58], [88, 74]], [[27, 90], [149, 90], [88, 106]]]));
+    buntingSvg(w, h, [[P(.262, .62), P(.712, .62), P(.487, .70)], [P(.194, .82), P(.775, .82), P(.485, .90)]]));
   const el = document.querySelector('.bunting');
-  el.style.top = '-118px'; el.style.left = 'calc(46px + 34% + 13px + var(--hx,0px) - 88px)';   // やぐらと同じ場所
+  el.style.top = (-DERRICK.groundY * h) + 'px';
+  el.style.left = 'calc(46px + 34% + 13px + var(--hx,0px) - ' + (DERRICK.axis * w) + 'px)';   // 櫓と同じ場所
 }
 {
   const cap = window.Capacitor;

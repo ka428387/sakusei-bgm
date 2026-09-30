@@ -114,9 +114,9 @@
     check('応援した人には、やぐらに祝い旗が掛かる', await until(() => $q('.bunting'), 3000), '祝い旗がない');
     check('祝い旗が、赤と白の旗をたくさん持っている', document.querySelectorAll('.bunting .flag').length >= 10,
       document.querySelectorAll('.bunting .flag').length);
-    const anchor = (ROT ? 80 : 88);                   // 旗の絵の中で、孔の中心にあたる x（やぐら・リグの絵と同じ）
+    const anchor = ROT ? RIG.w * RIG.axis : DERRICK.w * DERRICK.axis;   // 旗の絵の中で、掘削軸にあたる x（機械の絵と同じ）
     const at = () => box('.bunting').left + anchor;
-    check('つなぎ目：祝い旗の中心が、孔の中心とそろう', near(at(), cx(box('.hole')), 1.5), `旗 ${at().toFixed(1)} / 孔 ${cx(box('.hole')).toFixed(1)}`);
+    check('つなぎ目：祝い旗が、機械の絵と同じ場所にある（掘削軸が孔の中心とそろう）', near(at(), cx(box('.hole')), 1.5), `旗 ${at().toFixed(1)} / 孔 ${cx(box('.hole')).toFixed(1)}`);
     holeX += 30; applyHoleX(); await wait(1200);       // 井戸が横へ移るとき
     check('井戸が横へ移っても、祝い旗はやぐらと一緒に動く', near(at(), cx(box('.hole')), 1.5), `旗 ${at().toFixed(1)} / 孔 ${cx(box('.hole')).toFixed(1)}`);
     check('祝い旗をかけても、掘る処理は止まらない（ページのエラーなし）', !window.__errs.length, window.__errs.join(' / '));
@@ -128,6 +128,27 @@
     check('「← ホーム」でトップへ戻れる', home && home.getAttribute('href') === '../', home && home.getAttribute('href'));
     check('地層が描かれている', $q('#strata').children.length > 3, $q('#strata').children.length);
     check('Web版には祝い旗が出ない', !$q('.bunting'), '購入の部品がないのに祝い旗がある');
+
+    // ── 絵：読み込み・質感・二重表示なし ──
+    const artSel = ROT ? '#rig' : '#derrick', art = $q(artSel);
+    check('機械の絵が読み込まれている', await until(() => art.complete && art.naturalWidth > 0, 4000), art.currentSrc);
+    const bgs = [...$q('#strata').children].map(el => getComputedStyle(el).backgroundImage).join(' ');
+    check('地層に質感（土・砂礫・岩）が敷かれている', /soil\.jpg/.test(bgs) && /gravel\.jpg|rock\.jpg/.test(bgs), bgs.slice(0, 120));
+    check('地層名に下地がつき、質感の上でも読める', getComputedStyle($q('.layer .nm')).backgroundColor !== 'rgba(0, 0, 0, 0)');
+    check('空の絵が敷かれている', /sky-morning\.jpg/.test(getComputedStyle($q('.sky')).backgroundImage));
+    if (ROT) check('泥水タンクの飾りが二重になっていない（絵の中のタンクだけ）', !$q('.mud-pit'), '古い .mud-pit が残っている');
+    // 小さい画面でも、機械の頭が切れない（地表は画面の上から固定の割合なので、絵の高さを画面に合わせている）
+    for (const [w, h] of [[375, 548], [375, 667], [390, 844], [430, 932]]) {
+      // 対象のページは画面いっぱいの縦並びなので、枠は画面に固定する（並びの中に入れると縮められる）
+      const f = document.createElement('iframe');
+      f.style.cssText = `position:fixed;left:0;top:0;width:${w}px;height:${h}px;border:0;z-index:99`; f.src = 'index.html?frame';
+      document.body.appendChild(f);
+      await new Promise(r => f.onload = r); await wait(400);
+      const d = f.contentDocument, s = d.querySelector(artSel).getBoundingClientRect(), lg = d.getElementById('log').getBoundingClientRect();
+      check(`画面 ${w}×${h} でも、機械の頭が切れない`, f.contentWindow.innerHeight === h && s.top >= lg.top - 0.5 && s.height >= 60,
+        `画面の高さ ${f.contentWindow.innerHeight}px / 機械の上端 ${Math.round(s.top - lg.top)}px（画面の上から）、高さ ${Math.round(s.height)}px`);
+      f.remove();
+    }
 
     // 掘削開始（ロータリーは泥水ポンプも入れる）。テスト中は偶発のトラブルを起こさない
     $q('#run').click();
@@ -195,19 +216,64 @@
     check('横へ移って、新しい井戸を0mから掘る', holeX > hx0 && dNew === 0 && lost > 0,
       `横位置 ${hx0}→${holeX}px / 掘り直した直後の掘進長 ${dNew.toFixed(1)}m`);
 
-    // ── つなぎ目：絵とシステムが重なっているか（移ったあとの位置で測る） ──
+    // ── つなぎ目：絵とシステムが重なっているか（井戸が横へ移ったあとの位置で測る） ──
     paint();
+    const sel = ROT ? '#rig' : '#derrick', spr = $q(sel), S = ROT ? RIG : DERRICK;
     if (ROT) {
-      const rig = box('.rotary-rig'), rod = box('.bitline .rod');
-      check('つなぎ目：リグの絵の配管が、実際のロッドと重なる', near(rig.left + 80, cx(rod)),
-        `絵の配管 ${(rig.left + 80).toFixed(1)} / ロッド ${cx(rod).toFixed(1)}（絵の x=80 が配管。絵を変えたら .rotary-rig の left を測り直す）`);
-      check('つなぎ目：ロッドの上端が、絵のスイベルの下端で止まる', near(rod.top, rig.top + 74),
-        `ロッド上端 ${rod.top.toFixed(1)} / スイベル下端 ${(rig.top + 74).toFixed(1)}（絵の y=74。絵を変えたら RIG_SWIVEL を測り直す）`);
+      const rig = box(sel), rod = box('.bitline .rod');
+      const axis = rig.left + RIG.w * RIG.axis, headBottom = rig.top + RIG.h * RIG.headY;
+      check('つなぎ目：リグの掘削軸（レールのあいだ）が、実際のロッドの中心と重なる', near(axis, cx(rod), 1.5),
+        `絵の掘削軸 ${axis.toFixed(1)} / ロッド ${cx(rod).toFixed(1)}（RIG.axis は画像から測った割合。絵を変えたら測り直す）`);
+      check('つなぎ目：ロッドの上端が、ヘッドの下端で止まる', near(rod.top, headBottom, 1.5),
+        `ロッド上端 ${rod.top.toFixed(1)} / ヘッド下端 ${headBottom.toFixed(1)}（RIG.headY。絵を変えたら測り直す）`);
     } else {
-      const sheave = box('#derrick').left + 88, cable = cx(box('#cable')), hole = cx(box('.hole'));
-      check('つなぎ目：やぐらの滑車・ワイヤー・孔の中心がそろう', near(sheave, cable, 1.5) && near(cable, hole, 1.5),
-        `滑車 ${sheave.toFixed(1)} / ワイヤー ${cable.toFixed(1)} / 孔 ${hole.toFixed(1)}（絵の x=88 が滑車）`);
+      const sheave = box(sel).left + DERRICK.w * DERRICK.axis, cable = cx(box('#cable')), hole = cx(box('.hole'));
+      check('つなぎ目：櫓の滑車・ワイヤー・孔の中心がそろう', near(sheave, cable, 1.5) && near(cable, hole, 1.5),
+        `滑車 ${sheave.toFixed(1)} / ワイヤー ${cable.toFixed(1)} / 孔 ${hole.toFixed(1)}（DERRICK.axis は画像から測った割合）`);
+      const cableTop = box('#cable').top, sheaveY = box(sel).top + DERRICK.sheaveY * DERRICK.h;
+      check('つなぎ目：ワイヤーの始点が、冠部の滑車の高さにある', near(cableTop, sheaveY, 1.5), `ワイヤー始点 ${cableTop.toFixed(1)} / 滑車 ${sheaveY.toFixed(1)}`);
     }
+    // ── 実測の突き合わせ：ページの定数（DERRICK / RIG）が、実際に配信する画像のピクセルと合っているか ──
+    //    （上の「重なる」は、ページの定数から位置を決めているので、定数が間違っていても通ってしまう。ここで画像そのものを測る）
+    {
+      const c = document.createElement('canvas'); c.width = spr.naturalWidth; c.height = spr.naturalHeight;
+      const g = c.getContext('2d'); g.drawImage(spr, 0, 0);
+      const px = g.getImageData(0, 0, c.width, c.height).data, W = c.width, H = c.height;
+      const solid = (x, y) => px[(y * W + x) * 4 + 3] > 128;
+      let bottom = H - 1; while (bottom > 0 && ![...Array(W).keys()].some(x => solid(x, bottom))) bottom--;
+      check('実測：機械の足の接地線が、画像の最も下の不透明な行と合う（定数 groundY）', near(S.groundY, bottom / H, 0.006),
+        `定数 ${S.groundY} / 画像 ${(bottom / H).toFixed(3)}`);
+      if (ROT) {
+        // ヘッドの少し下の行で、2本のレールのあいだの隙間（ロッドの通る道）を探す。定数は使わず、固定の範囲（画像の 0.775〜0.835）だけを見る
+        const yr = Math.round(0.66 * H); let gap = [0, 0], s = -1;
+        for (let x = Math.round(0.775 * W); x <= Math.round(0.835 * W); x++) {
+          const empty = !solid(x, yr);
+          if (empty && s < 0) s = x;
+          if ((!empty || x === Math.round(0.835 * W)) && s >= 0) { if (x - s > gap[1] - gap[0]) gap = [s, x - 1]; s = -1; }
+        }
+        const gapMid = (gap[0] + gap[1]) / 2 / W;
+        check('実測：リグの掘削軸が、ロッドの通る隙間（レールのあいだ）の中心と合う（定数 axis）', gap[1] > gap[0] && near(RIG.axis, gapMid, 0.006),
+          `定数 ${RIG.axis} / 画像の隙間の中心 ${gapMid.toFixed(3)}（隙間 ${(gap[0] / W).toFixed(3)}〜${(gap[1] / W).toFixed(3)}）`);
+        let y = Math.round(0.5 * H); const ax = Math.round(gapMid * W); while (y < H && solid(ax, y)) y++;   // 測った軸の上を下へたどって、ヘッドの下端（不透明が途切れる行）
+        check('実測：ヘッドの下端（ロッドの始点）が、画像と合う（定数 headY）', near(RIG.headY, y / H, 0.006),
+          `定数 ${RIG.headY} / 画像 ${(y / H).toFixed(3)}`);
+      } else {
+        const yr = Math.round(DERRICK.sheaveY * H); let l = 0, rr = W - 1;    // 冠部の滑車の高さで、機械の左右の端の中心
+        while (l < W && !solid(l, yr)) l++; while (rr > 0 && !solid(rr, yr)) rr--;
+        check('実測：櫓の掘削軸が、冠部の中心と合う（定数 axis）', near(DERRICK.axis, (l + rr) / 2 / W, 0.006),
+          `定数 ${DERRICK.axis} / 画像の冠部の中心 ${((l + rr) / 2 / W).toFixed(3)}`);
+        const footY = Math.round((DERRICK.groundY - 0.02) * H), runs = []; let s = -1;
+        for (let x = 0; x <= W; x++) { const v = x < W && solid(x, footY); if (v && s < 0) s = x; if (!v && s >= 0) { runs.push([s, x - 1]); s = -1; } }
+        const mid = runs.filter(([a, b]) => a / W > 0.3 && b / W < 0.7);      // 足元の中央の台座（左右の脚とウインチは除く）
+        check('実測：櫓の足元の中央の台座が、掘削軸を挟んでいる', mid.length > 0 && mid[0][0] / W < DERRICK.axis && mid[mid.length - 1][1] / W > DERRICK.axis,
+          `台座 ${mid.map(([a, b]) => (a / W).toFixed(3) + '〜' + (b / W).toFixed(3)).join(' ')} / 軸 ${DERRICK.axis}`);
+      }
+    }
+    const r = box(sel);
+    check('絵を伸ばしていない（縦横比が画像のまま）', near(r.width / r.height, spr.naturalWidth / spr.naturalHeight, 0.01),
+      `表示 ${(r.width / r.height).toFixed(3)} / 画像 ${(spr.naturalWidth / spr.naturalHeight).toFixed(3)}`);
+    check('絵の足が地表に立つ（浮いても、埋まってもいない）', near(r.top + S.groundY * S.h, box('.strata').top, 1.5),
+      `足 ${(r.top + S.groundY * S.h).toFixed(1)} / 地表 ${box('.strata').top.toFixed(1)}`);
 
     // ── 出水したらそこで止まる ──
     if (ROT) {

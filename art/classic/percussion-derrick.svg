@@ -1,0 +1,44 @@
+<!-- 井戸ビートの旧アート（2026-09-30 まで）。ページからは使っていない。 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="176" height="120" viewBox="0 0 176 120" fill="none">
+      <!-- 奥側の脚 -->
+      <path d="M34 118 L80 12" stroke="#2C557C" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M142 118 L96 12" stroke="#2C557C" stroke-width="3.4" stroke-linecap="round"/>
+      <!-- 手前の脚 -->
+      <path d="M10 118 L76 9" stroke="#3E7FB5" stroke-width="5" stroke-linecap="round"/>
+      <path d="M166 118 L100 9" stroke="#3E7FB5" stroke-width="5" stroke-linecap="round"/>
+      <!-- 脚の継ぎ足場 -->
+      <path d="M22 96 L44 96 M132 96 L154 96" stroke="#35648F" stroke-width="3"/>
+      <!-- マスト -->
+      <path d="M79 8 L79 114" stroke="#4585B8" stroke-width="4"/>
+      <path d="M97 8 L97 114" stroke="#4585B8" stroke-width="4"/>
+      <!-- 水平材とブレース -->
+      <g stroke="#3E76A8" stroke-width="1.8">
+        <path d="M79 20 L97 20 M79 36 L97 36 M79 52 L97 52 M79 68 L97 68 M79 84 L97 84 M79 100 L97 100"/>
+        <path d="M79 20 L97 36 M97 20 L79 36 M79 52 L97 68 M97 52 L79 68 M79 84 L97 100 M97 84 L79 100"/>
+        <path d="M79 36 L97 52 M97 36 L79 52 M79 68 L97 84 M97 68 L79 84"/>
+      </g>
+      <!-- はしご段 -->
+      <g stroke="#5D93BF" stroke-width="1.5">
+        <path d="M71 26 L79 26 M71 40 L79 40 M71 54 L79 54 M71 68 L79 68 M71 82 L79 82 M71 96 L79 96"/>
+      </g>
+      <!-- 錆 -->
+      <g stroke="#8A5A3A" stroke-width="2" opacity=".55" stroke-linecap="round">
+        <path d="M79 44 L79 49 M97 74 L97 78 M20 104 L23 99 M156 100 L153 95 M79 90 L79 93"/>
+      </g>
+      <!-- クラウンと滑車 -->
+      <rect x="72" y="2" width="32" height="9" fill="#2C557C" stroke="#3E7FB5" stroke-width="1.5"/>
+      <circle cx="88" cy="7" r="5.5" fill="#1A2733" stroke="#8C8272" stroke-width="1.6"/>
+      <circle cx="88" cy="7" r="2.1" fill="#303C49" stroke="#B19A7B" stroke-width=".8"/>
+      <!-- ウインチへのワイヤー -->
+      <path d="M91 10 C105 38 124 75 138 103" stroke="#8C8272" stroke-width="1.4"/>
+      <!-- ウインチ -->
+      <rect x="120" y="100" width="38" height="18" fill="#202B36" stroke="#35648F" stroke-width="1.5"/>
+      <circle cx="139" cy="107" r="6" fill="#33404E" stroke="#8C8272" stroke-width="1.5"/>
+      <circle cx="139" cy="107" r="2.3" fill="#171D22"/>
+      <path d="M128 103 C133 100 145 100 150 104 M128 107 C134 104 145 104 150 108 M128 111 C135 108 145 108 150 112" stroke="#746B5D" stroke-width=".75" opacity=".8"/>
+      <!-- クランプと足元の枕木 -->
+      <g fill="#7F684F" stroke="#29231E" stroke-width=".7">
+        <rect x="75" y="31" width="26" height="3" rx="1"/><rect x="75" y="63" width="26" height="3" rx="1"/><rect x="75" y="95" width="26" height="3" rx="1"/>
+      </g>
+      <path d="M2 117H57 M114 117H174" stroke="#4E3E2D" stroke-width="5"/><path d="M2 115H57 M114 115H174" stroke="#876A49" stroke-width="1.4"/>
+    </svg>
