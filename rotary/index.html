@@ -23,7 +23,7 @@
 <meta property="og:image" content="https://ka428387.github.io/sakusei-bgm/og-rotary.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="掘進長96.0mまで掘り進んだ柱状図。泥岩・砂岩・花こう岩・破砕帯の地層と掘削孔が並ぶ画面。">
+<meta property="og:image:alt" content="青空の下にロータリー掘削機が立ち、地層の下へ掘削孔が伸びる絵。左側に「井戸ビート ロータリー編」の題字。">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="井戸ビート ロータリー編">
@@ -879,12 +879,20 @@ document.addEventListener('visibilitychange',()=>{
 function buntingSvg(w, h, strings) {                 // strings: [[始点], [終点], [たるみの制御点]]（px）の紐を何本か
   let s = '';
   strings.forEach(([a, b, c], si) => {
-    s += `<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)} Q${c[0].toFixed(1)} ${c[1].toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}" stroke="#F4EFE3" stroke-width="1" opacity=".9"/>`;
+    s += `<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)} Q${c[0].toFixed(1)} ${c[1].toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}" stroke="#E9E1D2" stroke-width="1" opacity=".95"/>`;
     const k = RIG.h / 180, n = Math.max(3, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / (11 * k)));
     for (let i = 1; i < n; i++) {
       const t = i / n, u = 1 - t;
       const x = u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], y = u * u * a[1] + 2 * u * t * c[1] + t * t * b[1];
-      s += `<polygon class="flag" style="animation-delay:${(-((i * 7 + si * 3) % 11) * .33).toFixed(2)}s" fill="${(i + si) % 2 ? '#F4EFE3' : '#B5482A'}" points="${(x - 4.5 * k).toFixed(1)},${y.toFixed(1)} ${(x + 4.5 * k).toFixed(1)},${y.toFixed(1)} ${x.toFixed(1)},${(y + 10 * k).toFixed(1)}"/>`;
+      // 紅白の布旗。配置は既存の紐のまま、外側のgで位置・内側のgで揺れを分離する。
+      const cloth = (i + si) % 2 ? '#E9E1D2' : '#B5482A';
+      s += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><g class="flag" style="animation-delay:${(-((i * 7 + si * 3) % 11) * .33).toFixed(2)}s"><g transform="scale(${k.toFixed(4)})">
+        <path d="M-4.2 0H4.2L3.7 10.8Q1.7 10.1 0 10.9Q-2 11.6-3.9 10.8Z" fill="${cloth}"/>
+        <path d="M1.8 .8L3.7 10.8Q2.2 10.3 1.1 10.6L.4 .8Z" fill="#1C1713" opacity=".13"/>
+        <path d="M-3.3 1.6L-3.1 9.4" stroke="#FFF8E8" stroke-width=".55" opacity=".35"/>
+        <path d="M-4.2 .8H4.2" stroke="#1C1713" stroke-width="1.1" opacity=".2"/>
+        <path d="M-2.8-.8V1.1M2.8-.8V1.1" stroke="#E9E1D2" stroke-width=".65"/>
+      </g></g></g>`;
     }
   });
   return `<svg class="bunting" aria-hidden="true" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none">${s}</svg>`;
