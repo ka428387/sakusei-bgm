@@ -8,13 +8,16 @@
    - 水が出たらそこで止まる
    - 絵（やぐら・リグ）が実際のワイヤー・ロッド・孔と重なっている
    - トップはスマホでスクロールせずに両方の工法が選べる
+   - 応援（投げ銭）：Web版には出ない。アプリの中（購入の部品の代役を差し込んだ「（アプリ）」の実行）では、
+     金額が並び、キャンセルしても何も変わらず、応援すると手紙が開き、応援した人のやぐらに祝い旗が掛かる
    掘削の処理はページの本物を使うが、時計だけはテスト用に差し替えて10倍速で回す。
    画面なしのChromeは、Macの音声出力が使えないと音の時計（AudioContext）が止まり、
    そのままだと公開が止まってしまうため。トラブルやベーラーの段階送りも、テストから直接進める */
 (async () => {
   const R = [];
   const $q = s => document.querySelector(s);
-  const PAGE = $q('#bail') ? 'パーカッション編' : $q('#pump') ? 'ロータリー編' : 'トップ';
+  const NATIVE = /[?&]native\b/.test(location.search);        // アプリの中と同じ状態（購入の部品の代役あり）
+  const PAGE = ($q('#bail') ? 'パーカッション編' : $q('#pump') ? 'ロータリー編' : 'トップ') + (NATIVE ? '（アプリ）' : '');
   const check = (name, ok, detail) =>
     R.push({ name: PAGE + '：' + name, ok: !!ok, detail: ok ? '' : String(detail ?? '') });
   const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -29,7 +32,10 @@
   const cx = r => r.left + r.width / 2;
 
   try {
-    if (PAGE === 'トップ') await testTop(); else await testDrill();
+    if (PAGE === 'トップ') await testTop();
+    else if (PAGE === 'トップ（アプリ）') await testNativeTop();
+    else if (NATIVE) await testNativeDrill();
+    else await testDrill();
   } catch (e) {
     check('テストの途中で止まった', false, (e && e.stack) || e);
   }
@@ -40,6 +46,7 @@
     const cards = [...document.querySelectorAll('a.card')];
     const hrefs = cards.map(a => a.getAttribute('href'));
     check('工法のカードが2枚ある', hrefs.includes('rotary/') && hrefs.includes('percussion/'), hrefs.join(', '));
+    check('Web版には応援ボタンが出ない', $q('#tipBtn').hidden, '購入の部品がないのにボタンが出ている');
     // スマホの表示域の大きさで開き、スクロールせずに両方の工法が見えるか。
     // 必須：画面の大きさ（iPhone SE 375×667）と、Safari の表示域（iPhone 14 など 390×664）。参考：SE を Safari で開いたとき
     const sizes = [[375, 667, true], [390, 664, true], [430, 739, true], [375, 548, false]];
@@ -58,11 +65,68 @@
     }
   }
 
+  // 応援の画面：ボタン→金額→キャンセル→応援→手紙。アプリの画面の大きさでもスクロールなしに収まる
+  async function testNativeTop() {
+    const btn = $q('#tipBtn');
+    check('アプリの中では応援ボタンが出る', btn && !btn.hidden, '応援ボタンが隠れたまま');
+    btn.click();
+    check('ボタンを押すと応援の画面が開く', await until(() => $q('#tipM').classList.contains('on'), 2000));
+    check('金額のボタンが3つ、名前と値段つきで並ぶ',
+      await until(() => $q('#tipActs').querySelectorAll('button').length === 3, 3000) &&
+        [...$q('#tipActs').querySelectorAll('button')].map(b => b.textContent).join('|') === 'ちょっと応援　¥160|応援　¥480|たっぷり応援　¥980',
+      [...$q('#tipActs').querySelectorAll('button')].map(b => b.textContent).join('|'));
+    check('応援する前は「手紙を読む」が出ていない', $q('#thanksActs').hidden);
+    __store.next = 'cancelled';
+    $q('#tipActs button').click(); await wait(400);
+    check('キャンセルしても、何も変わらず、手紙も開かない', __store.tips === 0 && !$q('#letterM').classList.contains('on') && !$q('#tipActs button').disabled,
+      `回数 ${__store.tips}`);
+    __store.next = 'success';
+    $q('#tipActs button').click();
+    check('応援すると、初めてのときだけ手紙が開く', await until(() => $q('#letterM').classList.contains('on'), 3000) && __store.tips === 1,
+      `回数 ${__store.tips}`);
+    check('手紙は、ビットから届いた文面', /ビットより/.test($q('#letterM').textContent), $q('#letterM').textContent.slice(0, 40));
+    $q('#letterClose').click();
+    check('手紙を閉じると、応援の画面は閉じている（もう一度は勝手に開かない）', !$q('#letterM').classList.contains('on') && !$q('#tipM').classList.contains('on'));
+    $q('#tipBtn').click(); await until(() => $q('#tipActs').querySelectorAll('button').length === 3, 3000);
+    check('応援したあとは「手紙を読む」が出て、回数が書かれる', !$q('#thanksActs').hidden && /1 回/.test($q('#tipP').textContent), $q('#tipP').textContent.slice(-40));
+    $q('#tipActs button').click(); await wait(500);
+    check('2回目の応援では、手紙が自動では開かない', __store.tips === 2 && !$q('#letterM').classList.contains('on'), `回数 ${__store.tips}`);
+    // 応援ボタンが出ている状態でも、スマホでスクロールせずに両方の工法が見える
+    for (const [w, h] of [[375, 667], [390, 664], [430, 739]]) {
+      const f = document.createElement('iframe');
+      f.width = w; f.height = h; f.style.border = '0'; f.src = 'index.html?stub&frame';
+      document.body.appendChild(f);
+      await new Promise(r => f.onload = r); await wait(250);
+      const d = f.contentDocument, sh = d.documentElement.scrollHeight;
+      const fits = sh <= h + 1 && [...d.querySelectorAll('a.card')].every(a => a.getBoundingClientRect().bottom <= h + 1) &&
+        d.getElementById('tipBtn').getBoundingClientRect().bottom <= h + 1 && !d.getElementById('tipBtn').hidden;
+      const tb = d.getElementById('tipBtn').getBoundingClientRect();
+      check(`応援ボタンが出ていても、スマホ ${w}×${h} でスクロールせずに収まる`, fits,
+        `ページの高さ ${sh}px / カードの下端 ${[...d.querySelectorAll('a.card')].map(a => Math.round(a.getBoundingClientRect().bottom)).join(',')} / 応援ボタン 隠れている=${d.getElementById('tipBtn').hidden} 下端 ${Math.round(tb.bottom)} / 代役 ${!!d.defaultView.Capacitor} / エラー ${(d.defaultView.__errs || []).join(' | ')} / URL ${f.contentWindow.location.search}`);
+      f.remove();
+    }
+  }
+
+  // 応援した人のやぐら（リグ）に、祝い旗が掛かる。井戸が横へ移っても、やぐらと一緒に動く
+  async function testNativeDrill() {
+    const ROT = PAGE.startsWith('ロータリー');
+    check('応援した人には、やぐらに祝い旗が掛かる', await until(() => $q('.bunting'), 3000), '祝い旗がない');
+    check('祝い旗が、赤と白の旗をたくさん持っている', document.querySelectorAll('.bunting .flag').length >= 10,
+      document.querySelectorAll('.bunting .flag').length);
+    const anchor = (ROT ? 80 : 88);                   // 旗の絵の中で、孔の中心にあたる x（やぐら・リグの絵と同じ）
+    const at = () => box('.bunting').left + anchor;
+    check('つなぎ目：祝い旗の中心が、孔の中心とそろう', near(at(), cx(box('.hole')), 1.5), `旗 ${at().toFixed(1)} / 孔 ${cx(box('.hole')).toFixed(1)}`);
+    holeX += 30; applyHoleX(); await wait(1200);       // 井戸が横へ移るとき
+    check('井戸が横へ移っても、祝い旗はやぐらと一緒に動く', near(at(), cx(box('.hole')), 1.5), `旗 ${at().toFixed(1)} / 孔 ${cx(box('.hole')).toFixed(1)}`);
+    check('祝い旗をかけても、掘る処理は止まらない（ページのエラーなし）', !window.__errs.length, window.__errs.join(' / '));
+  }
+
   async function testDrill() {
     const ROT = PAGE === 'ロータリー編';
     const home = $q('a.home');
     check('「← ホーム」でトップへ戻れる', home && home.getAttribute('href') === '../', home && home.getAttribute('href'));
     check('地層が描かれている', $q('#strata').children.length > 3, $q('#strata').children.length);
+    check('Web版には祝い旗が出ない', !$q('.bunting'), '購入の部品がないのに祝い旗がある');
 
     // 掘削開始（ロータリーは泥水ポンプも入れる）。テスト中は偶発のトラブルを起こさない
     $q('#run').click();

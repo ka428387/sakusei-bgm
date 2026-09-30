@@ -225,6 +225,11 @@
     .tool.stuck,.log.quake,button.urgent{animation:none}
     .flash.on,.shout.on{animation-duration:.01s}
   }
+  /* 応援してくれた人へのお礼：やぐらの祝い旗（見た目だけ。応援のあとにアプリの中だけで掛かる） */
+  .bunting{position:absolute;pointer-events:none;transition:left .9s ease}
+  .bunting .flag{transform-box:fill-box;transform-origin:50% 0;animation:flagsway 3.6s ease-in-out infinite}
+  @keyframes flagsway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+  @media (prefers-reduced-motion:reduce){.bunting .flag{animation:none}}
 </style>
 </head>
 <body>
@@ -1010,6 +1015,35 @@ addEventListener('resize',paint);
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden && (running||ambientId) && ctx) ctx.resume();
 });
+
+/* 応援してくれた人へのお礼：やぐらに祝いの旗を掛ける（見た目だけ）。
+   応援の回数は iPhone アプリの記録から読む（IdoBeatStore）。Web版では何も起きない。 */
+function buntingSvg(w, h, strings) {                 // strings: [[始点], [終点], [たるみの制御点]] の紐を何本か
+  let s = '';
+  strings.forEach(([a, b, c], si) => {
+    s += `<path d="M${a[0]} ${a[1]} Q${c[0]} ${c[1]} ${b[0]} ${b[1]}" stroke="#CBBFA9" stroke-width="1" opacity=".85"/>`;
+    const n = Math.round((b[0] - a[0]) / 12);
+    for (let i = 1; i < n; i++) {
+      const t = i / n, u = 1 - t;
+      const x = u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], y = u * u * a[1] + 2 * u * t * c[1] + t * t * b[1];
+      s += `<polygon class="flag" style="animation-delay:${(-((i * 7 + si * 3) % 11) * .33).toFixed(2)}s" fill="${(i + si) % 2 ? '#E9E1D2' : '#B5482A'}" points="${(x - 4.5).toFixed(1)},${y.toFixed(1)} ${(x + 4.5).toFixed(1)},${y.toFixed(1)} ${x.toFixed(1)},${(y + 10).toFixed(1)}"/>`;
+    }
+  });
+  return `<svg class="bunting" aria-hidden="true" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none">${s}</svg>`;
+}
+function hangBunting() {
+  if (document.querySelector('.bunting')) return;
+  // やぐらの2本の脚（図の x=46〜130 と 27〜149）のあいだに、2段の紐を渡す
+  document.getElementById('derrick').insertAdjacentHTML('afterend',
+    buntingSvg(176, 120, [[[46, 58], [130, 58], [88, 74]], [[27, 90], [149, 90], [88, 106]]]));
+  const el = document.querySelector('.bunting');
+  el.style.top = '-118px'; el.style.left = 'calc(46px + 34% + 13px + var(--hx,0px) - 88px)';   // やぐらと同じ場所
+}
+{
+  const cap = window.Capacitor;
+  if (cap && cap.nativePromise && (cap.PluginHeaders || []).some(h => h.name === 'IdoBeatStore'))
+    cap.nativePromise('IdoBeatStore', 'status', {}).then(r => { if (r && r.tips > 0) hangBunting(); }).catch(() => {});
+}
 
 applyHoleX(); render(); paint();
 </script>

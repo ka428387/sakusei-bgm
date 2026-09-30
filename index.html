@@ -106,7 +106,33 @@
   .foot details[open] summary::before{content:"− "}
   .foot .about{padding:8px 0 2px;line-height:1.95;color:#A9A093;max-width:64ch}
   .foot .about b{color:#CFC6B6;font-weight:500}
-  .foot .end{margin-top:8px;font-size:11px;color:#6E6558;letter-spacing:.04em}
+  .foot .end{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;
+    font-size:11px;color:#6E6558;letter-spacing:.04em}
+  .tipbtn{margin-left:auto;font:inherit;font-size:12.5px;letter-spacing:.12em;padding:7px 12px;cursor:pointer;
+    color:#E0916A;background:transparent;border:1px solid #7A4A2A;border-radius:2px}
+  .tipbtn:hover{border-color:#B06A3E}
+  .tipbtn:focus-visible,.sheet .btn:focus-visible{outline:2px solid var(--spring);outline-offset:2px}
+
+  /* ── 応援（投げ銭）の画面。iPhoneアプリの中だけで開く ── */
+  .modal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;
+    padding:20px;background:rgba(10,8,6,.78)}
+  .modal.on{display:flex}
+  .sheet{width:100%;max-width:420px;max-height:calc(100dvh - 40px);overflow:auto;
+    background:#171310;border:1px solid #4A4238;border-radius:3px;padding:22px 20px 18px}
+  .sheet h3{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:19px;font-weight:600;
+    letter-spacing:.1em;margin-bottom:12px}
+  .sheet p{font-size:13.5px;line-height:1.9;color:#CFC6B6}
+  .sheet small{display:block;margin-top:6px;font-size:11.5px;line-height:1.8;color:#A2988A}
+  .sheet .acts{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .sheet .btn{font:inherit;font-size:14px;letter-spacing:.12em;padding:12px 8px;cursor:pointer;
+    color:var(--paper);background:transparent;border:1px solid #5C5145;border-radius:2px}
+  .sheet .btn:disabled{opacity:.4;cursor:default}
+  .sheet.letter p{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:14.5px;line-height:2.05}
+  .sheet.letter .sign{margin-top:10px;text-align:right;letter-spacing:.12em}
+  .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);
+    z-index:40;max-width:calc(100% - 40px);padding:10px 16px;font-size:13px;color:var(--paper);
+    background:#2A241E;border:1px solid #5C5145;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .25s}
+  .toast.on{opacity:1}
 
   @media (min-width:720px){
     header{padding:44px 2px 26px}
@@ -175,14 +201,87 @@
         ソースは <a href="https://github.com/ka428387/sakusei-bgm">GitHub</a> にあります。
       </div>
     </details>
-    <div class="end">MIT License</div>
+    <div class="end"><span class="lic">MIT License</span><button class="tipbtn" id="tipBtn" type="button" hidden>♡ 応援する</button></div>
   </div>
 
 </div>
+
+<div class="modal" id="tipM" role="dialog" aria-modal="true" aria-labelledby="tipT"><div class="sheet">
+  <h3 id="tipT">井戸ビートを応援する</h3>
+  <p id="tipP"></p>
+  <div class="acts" id="tipActs"></div>
+  <div class="acts" id="thanksActs" hidden><button class="btn" id="tipLetter" type="button">✉ ビットからの手紙を読む</button></div>
+  <div class="acts"><button class="btn" id="tipClose" type="button">閉じる</button></div>
+</div></div>
+<div class="modal" id="letterM" role="dialog" aria-modal="true" aria-labelledby="letterT"><div class="sheet letter">
+  <h3 id="letterT">応援してくれたあなたへ</h3>
+  <p>今日も、掘ってくれてありがとう。<br>
+    地面の下は、暗くて、しんとしています。でも、あなたが打ってくれるビートは、ちゃんとここまで届いています。<br><br>
+    粘土のあたりは、少し息苦しかった。砂れきは、足もとがざらざらして、くすぐったかった。岩に当たったときは、正直、痛かった。それでも、掘ってもらえるのが、いちばんうれしいです。<br><br>
+    お礼に、やぐらに祝いの旗を掛けておきました。井戸を掘るたびに、ひらひらしています。<br><br>
+    また、いっしょに掘りましょう。</p>
+  <p class="sign">ビットより</p>
+  <div class="acts"><button class="btn" id="letterClose" type="button">閉じる</button></div>
+</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <script>
 /* オフラインとホーム画面起動のための Service Worker */
 if ('serviceWorker' in navigator) {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+<script>
+/* 応援（投げ銭）。iPhoneアプリの中だけ（App 内課金は app/ios/App/App/IdoBeatStore.swift、消耗型3つ）。
+   応援しても遊べる範囲は変わらない。お礼は、やぐらの祝い旗（見た目だけ）とビットからの手紙。Web版ではボタンを出さない。
+   応援した回数は iPhone の記録（アプリ側）から読む。Web 側では何も保存しない。 */
+const TIP_IDS = ['com.ka428387.idobeat.tip1', 'com.ka428387.idobeat.tip2', 'com.ka428387.idobeat.tip3'];
+const TIP_NAMES = ['ちょっと応援', '応援', 'たっぷり応援'];
+{
+  const cap = window.Capacitor;
+  if (cap && cap.nativePromise && (cap.PluginHeaders || []).some(h => h.name === 'IdoBeatStore')) {
+    const $ = id => document.getElementById(id), store = (m, o) => cap.nativePromise('IdoBeatStore', m, o || {});
+    const M = $('tipM'), L = $('letterM'), P = $('tipP'), A = $('tipActs');
+    let busy = false, toastTimer = 0;
+    const toast = m => { const el = $('toast'); el.textContent = m; el.classList.add('on');
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), 2600); };
+    // 説明と、これまでの回数。回数はアプリ側の記録
+    const lead = async () => {
+      let n = 0; try { n = (await store('status')).tips || 0; } catch (e) {}
+      $('thanksActs').hidden = !(n > 0);
+      P.innerHTML = '井戸ビートは無料で、すべて遊べます。<br>気に入ってもらえたら、応援してもらえるとうれしいです。'
+        + '<small>お礼に、やぐらに祝いの旗がかかり、ビットから手紙が届きます（どの金額でも同じ）。遊べる範囲は変わりません。</small>'
+        + (n ? '<small>これまでに ' + n + ' 回応援してもらいました。ありがとうございます。</small>' : '');
+      return n;
+    };
+    const buy = async id => {
+      if (busy) return; busy = true; A.querySelectorAll('button').forEach(x => x.disabled = true);
+      try {
+        const r = await store('purchase', { id });
+        if (r.status === 'success') {
+          toast('応援ありがとうございます！');
+          const n = await lead();
+          if (n === 1) { M.classList.remove('on'); L.classList.add('on'); }   // 初めての応援のときだけ、手紙を開く
+        } else if (r.status === 'pending') toast('承認を待っています。承認されたら応援が届きます');
+      } catch (e) { toast('応援できませんでした'); console.error(e); }
+      finally { busy = false; A.querySelectorAll('button').forEach(x => x.disabled = false); }
+    };
+    $('tipBtn').hidden = false;
+    $('tipBtn').onclick = async () => {
+      M.classList.add('on'); lead(); A.innerHTML = '<p>読み込んでいます…</p>';
+      let list = []; try { list = (await store('products', { ids: TIP_IDS })).products || []; } catch (e) { console.error(e); }
+      list.sort((a, b) => TIP_IDS.indexOf(a.id) - TIP_IDS.indexOf(b.id));
+      A.innerHTML = list.length ? '' : '<p>いまは App Store につながりません。時間をおいてもう一度どうぞ。</p>';
+      for (const p of list) {
+        const b = document.createElement('button'); b.className = 'btn'; b.type = 'button';
+        b.textContent = TIP_NAMES[TIP_IDS.indexOf(p.id)] + '　' + p.price; b.onclick = () => buy(p.id); A.appendChild(b);
+      }
+    };
+    $('tipClose').onclick = () => M.classList.remove('on');
+    $('tipLetter').onclick = () => L.classList.add('on');
+    $('letterClose').onclick = () => L.classList.remove('on');
+    addEventListener('keydown', e => { if (e.key === 'Escape') { L.classList.remove('on'); M.classList.remove('on'); } });
+  }
 }
 </script>
 </body>

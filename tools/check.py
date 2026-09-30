@@ -151,20 +151,33 @@ CATCH = ("<script>window.__errs=[];"
          "addEventListener('error',e=>__errs.push((e.message||'error')+' @'+String(e.filename||'').split('/').pop()+':'+e.lineno));"
          "addEventListener('unhandledrejection',e=>__errs.push('promise: '+e.reason))</script>")
 
-def run_selftest(root, timeout=180):
-    if not os.path.exists(CHROME):
-        ng('Chrome が見つからないので動作テストができない'); return
-    res = {}
+# iPhoneアプリの中では、購入の部品（IdoBeatStore）が window.Capacitor に入る。その代役（?native のときだけ差し込む）
+# ?tips=N で応援済みの回数を決める。購入の結果は window.__store.next（success / cancelled / pending）で変えられる
+STUB = ("<script>(function(){var q=new URLSearchParams(location.search);"
+        "var st=window.__store={tips:+(q.get('tips')||0),next:'success',calls:[]};"
+        "window.Capacitor={PluginHeaders:[{name:'IdoBeatStore'}],nativePromise:function(p,m,o){st.calls.push(m);"
+        "if(m==='status')return Promise.resolve({tips:st.tips});"
+        "if(m==='products')return Promise.resolve({products:((o&&o.ids)||[]).map(function(id,i){return{id:id,price:['¥160','¥480','¥980'][i],name:'Tip '+(i+1)}})});"
+        "if(m==='purchase'){if(st.next==='success')st.tips++;return Promise.resolve({status:st.next})}"
+        "return Promise.reject(new Error('unknown '+m))}}})()</script>")
+
+def make_handler(root, res):
     class H(http.server.SimpleHTTPRequestHandler):
         def __init__(s, *a, **k): super().__init__(*a, directory=root, **k)
         def log_message(s, *a): pass
         def do_GET(s):
             path = s.path.split('?')[0]
-            if 'selftest' in s.path and (path.endswith('.html') or path.endswith('/')):
+            # localhost では Service Worker が有効になり、あとから開いた枠（iframe）に保存版が返って、差し込みが効かなくなる。
+            # テストの中では無効にする（sw.js の中身は、1段目の点検で確かめている）
+            if path.endswith('/sw.js'):
+                s.send_error(404); return
+            if ('selftest' in s.path or 'stub' in s.path) and (path.endswith('.html') or path.endswith('/')):
                 f = os.path.join(root, path.lstrip('/'), *(['index.html'] if path.endswith('/') else []))
                 html = open(f, encoding='utf-8').read()
-                html = html.replace('<meta charset="utf-8">', '<meta charset="utf-8">' + CATCH, 1)
-                html = html.replace('</body>', '<script src="/tools/selftest.js"></script></body>', 1)
+                html = html.replace('<meta charset="utf-8">', '<meta charset="utf-8">' + CATCH
+                                    + (STUB if ('native' in s.path or 'stub' in s.path) else ''), 1)
+                if 'selftest' in s.path:      # ?stub だけのときは、iframe で画面の大きさを測るために代役だけ入れる
+                    html = html.replace('</body>', '<script src="/tools/selftest.js"></script></body>', 1)
                 b = html.encode('utf-8')
                 s.send_response(200); s.send_header('Content-Type', 'text/html; charset=utf-8')
                 s.send_header('Content-Length', str(len(b))); s.end_headers(); s.wfile.write(b)
@@ -174,23 +187,34 @@ def run_selftest(root, timeout=180):
             n = int(s.headers.get('Content-Length', 0)); r = json.loads(s.rfile.read(n) or b'{}')
             res[r.get('page', '?')] = r
             s.send_response(204); s.end_headers()
+    return H
+
+def run_selftest(root, timeout=180):
+    if not os.path.exists(CHROME):
+        ng('Chrome が見つからないので動作テストができない'); return
+    res = {}
+    H = make_handler(root, res)
     srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     port = srv.server_address[1]
     # トップの画面サイズは selftest.js の中で iframe を使って測る（画面なしの Chrome は幅500px未満にできない）
-    runs = [('トップ', 'index.html', (500, 900)),
-            ('ロータリー編', 'rotary/index.html', (390, 844)),
-            ('パーカッション編', 'percussion/index.html', (390, 844))]
+    # 「（アプリ）」は、iPhoneアプリの中と同じ状態（購入の部品あり）。応援の画面と、応援したあとの祝い旗を確かめる
+    runs = [('トップ', 'index.html?selftest', (500, 900)),
+            ('ロータリー編', 'rotary/index.html?selftest', (390, 844)),
+            ('パーカッション編', 'percussion/index.html?selftest', (390, 844)),
+            ('トップ（アプリ）', 'index.html?selftest&native', (500, 900)),
+            ('ロータリー編（アプリ）', 'rotary/index.html?selftest&native&tips=1', (390, 844)),
+            ('パーカッション編（アプリ）', 'percussion/index.html?selftest&native&tips=1', (390, 844))]
     for name, page, (w, h) in runs:
         # Chrome の起動が一度詰まることがあるので、終わらなかったときは1回だけやり直す
         # （トップは2秒で終わるので待ちを短く、ほかは掘る動きを含むので長く）
-        limit = 45 if name == 'トップ' else timeout
+        limit = 45 if name.startswith('トップ') or name.endswith('（アプリ）') else timeout
         for attempt in (1, 2):
             t0 = time.time()
             ud = tempfile.mkdtemp()
             p = subprocess.Popen([CHROME, '--headless=new', '--autoplay-policy=no-user-gesture-required', '--no-first-run',
                                   '--no-default-browser-check', f'--window-size={w},{h}', f'--user-data-dir={ud}',
-                                  f'http://127.0.0.1:{port}/{page}?selftest'],
+                                  f'http://127.0.0.1:{port}/{page}'],
                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             while name not in res and time.time() - t0 < limit and p.poll() is None: time.sleep(.3)
             p.kill(); p.wait(); shutil.rmtree(ud, ignore_errors=True)
