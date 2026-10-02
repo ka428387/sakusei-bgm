@@ -160,8 +160,16 @@
     font-size:13px;font-weight:700;line-height:1.5;color:#F4EFDF;background:rgba(9,32,46,.92);
     border:1px solid #64808A;opacity:0;transition:opacity .45s}
   .talk.on{opacity:1}
-  #talkA{left:10px;top:12%}
-  #talkB{left:44px;top:calc(12% + 46px);border-color:#C47D47;color:#F0B06A}
+  /* 吹き出し：上（通りがかりの人）は左下、下（掘り手の返事）は右下にしっぽ。しっぽは縁取り用と塗り用の三角を重ねる */
+  .talk::before,.talk::after{content:"";position:absolute;bottom:-1px;width:15px;height:12px}
+  .talk::before{background:#64808A}
+  .talk::after{background:rgba(9,32,46,.97);width:12px;height:10px;bottom:0}
+  #talkA{left:20px;top:12%}
+  #talkA::before{left:-12px;clip-path:polygon(0 100%,100% 0,100% 100%)}
+  #talkA::after{left:-9px;clip-path:polygon(0 100%,100% 0,100% 100%)}
+  #talkB{right:20px;top:calc(12% + 62px);border-color:#C47D47;color:#F0B06A}
+  #talkB::before{right:-12px;background:#C47D47;clip-path:polygon(100% 100%,0 0,0 100%)}
+  #talkB::after{right:-9px;clip-path:polygon(100% 100%,0 0,0 100%)}
   .log.quake{animation:quake .5s linear}
   @keyframes quake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
 
@@ -829,11 +837,19 @@ function passerArm(){
   if(!passerWill||passerTO) return;
   passerTO=setTimeout(passerFire,(25+Math.random()*35)*1000);
 }
+/* 通りがかりのやりとり（[話しかける, 返事]）。出るたびに1組えらぶ */
+const PASSER_TALKS=[
+  ['温泉掘ってるんけ？','いや、井戸っす'],
+  ['石油でるんけ？','今までで2〜3回っすね〜'],
+  ['コーヒー飲むけ？','ありがとうございます！！']
+];
 function passerFire(){
   passerTO=0;
   if(!running||done) return;                       // 止まっているあいだは出さない（再開でまた待つ）
   if(trouble){ passerTO=setTimeout(passerFire,8000); return; }
   passerWill=false;
+  const pair=PASSER_TALKS[Math.floor(Math.random()*PASSER_TALKS.length)];
+  $('#talkA').textContent=pair[0]; $('#talkB').textContent=pair[1];
   $('#talkA').classList.add('on');
   passerT2=setTimeout(()=>$('#talkB').classList.add('on'),2400);
   passerT3=setTimeout(()=>{ $('#talkA').classList.remove('on'); $('#talkB').classList.remove('on'); },7000);
