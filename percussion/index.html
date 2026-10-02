@@ -64,7 +64,7 @@
   }
   header h1{
     font-family:"Dela Gothic One","Noto Sans JP","Hiragino Sans",sans-serif;
-    font-size:21px;font-weight:400;font-synthesis:none;letter-spacing:-.045em;line-height:1.3;
+    font-size:28px;font-weight:400;font-synthesis:none;letter-spacing:-.045em;line-height:1;
   }
   header .sub{font-size:10.5px;color:#9DB5B9;letter-spacing:.03em}
   .home{
@@ -294,6 +294,7 @@
   <div class="hint"><span class="k">音が出ないときは</span><span class="k">端末のマナーモード</span><span class="k">（サイレントスイッチ）を</span><span class="k">確認してください</span></div>
 </div>
 
+<script src="../records.js"></script>
 <script>
 const PXM = 12;                // 1m = 12px（薄層の名前が読める縮尺）
 const SUB = 4;                 // 1打撃を4分割した音楽グリッド
@@ -771,7 +772,7 @@ function jab(){
   clank(t,true);
   trouble.prog++;
   if(trouble.prog>=trouble.need){
-    pop(t+.04);
+    pop(t+.04); IdoRec.freed('percussion');
     endTrouble('抜けました。ビットは無事です。掘進を再開します。');
   }else if(trouble.prog>JAR_SAFE && Math.random()<JAR_PART){
     snap(t+.06);
@@ -783,7 +784,7 @@ function jab(){
 }
 /* 孔もビットも地中に置いて、横に寄って新しい井戸を掘り直す */
 function abandonWell(t){
-  const lost=depth;
+  const lost=depth; IdoRec.lost('percussion');
   drawScar(0,lost,holeX); scarCount++;
   holeX+=34; applyHoleX();
   depth=0; slime=0; drilledSinceBail=0;
@@ -844,7 +845,7 @@ function drillStep(t){
       adv*=Math.max(.3,1-slime/3);           // 掘りカスが溜まると効かない
       if(depth<redrillTo) adv*=2;            // 崩壊区間の掘り直しは速い
       else if(depth<knownTo) adv*=1.5;       // 一度掘った地層は勝手が分かる
-      depth+=adv; slime+=adv*.55; drilledSinceBail+=adv;
+      depth+=adv; IdoRec.drill('percussion',adv,depth); slime+=adv*.55; drilledSinceBail+=adv;
       // 帯水層に入った。ストレーナーぶん掘り下げたら、さらって水を確かめる
       if(!struck && depth>=G.aq+1.5){
         startCycle(t,false,'帯水層に入りました。ベーラーで水を確かめます。'); return;
@@ -900,6 +901,7 @@ function stopAmbient(){ clearInterval(ambientId); ambientId=null; }
 
 function finish(){
   done=true; running=false; stopLoop(6000);
+  const up=IdoRec.well('percussion');
   $('#run').textContent='掘削開始'; $('#run').disabled=true;
   $('#bail').disabled=true; closeJarUI();
   casingFull=true;
@@ -908,7 +910,8 @@ function finish(){
   c.style.height=depth*PXM+'px';
   setMsg('出水。ここで掘進を止め、ケーシングとストレーナーを建て込みました。'
     +'深さ'+depth.toFixed(1)+'m・水位GL−'+G.swl.toFixed(1)+'m。'
-    +(scarCount?'（地中に残したビット：'+scarCount+'本）':''));
+    +(scarCount?'（地中に残したビット：'+scarCount+'本）':'')
+    +(up?'　肩書きが「'+up+'」になりました。':''));
   if(ctx){ [52,59,64,71].forEach((n,i)=>pluck(ctx.currentTime+i*.12,n,.16,'sine',3.4)); }
   startAmbient();
   let n=60;                                  // 水位が上がりきるまで描画を続ける

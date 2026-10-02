@@ -20,6 +20,7 @@ JSC = '/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/js
 CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGES = ['index.html', 'rotary/index.html', 'percussion/index.html']
+TEXT_FILES = PAGES + ['records.js']   # 画面に出る文字を持つファイル（書体の点検用）
 MANIFESTS = ['manifest.webmanifest', 'rotary/manifest.webmanifest', 'percussion/manifest.webmanifest']
 # キャッシュ番号を上げなくてよいファイル（アプリの表示に関係しない・オフライン用の一覧に入っていない）
 # 公開する変更記録の作者・コミッターは、この名前と noreply のメールに限る（本名やGmailを公開履歴に残さない）

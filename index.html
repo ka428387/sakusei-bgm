@@ -98,6 +98,19 @@
   .card.rot .go{color:#EBA672}
   .card.per .go{color:#9CC8E8}
 
+
+  /* ── これまでの記録（この端末の中だけ） ── */
+  .rec{position:relative;display:flex;align-items:center;gap:10px;margin-top:9px;padding-top:8px;
+    border-top:1px solid rgba(255,255,255,.14);font-size:11px;color:#B5C8CB;font-variant-numeric:tabular-nums}
+  .rec .badge{flex:none;width:34px;height:34px;display:grid;place-items:center;border:1px solid currentColor;border-radius:50%;
+    font-size:15px;font-weight:700;background:rgba(9,32,46,.66)}
+  .rec .badge img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+  .card.rot .rec .badge{color:#EBA672}
+  .card.per .rec .badge{color:#9CC8E8}
+  .rec .ttl{font-size:13px;font-weight:700;color:var(--paper);letter-spacing:.08em;line-height:1.35}
+  .rec .nx{display:block;font-size:10.5px;font-weight:500;color:#9DB5B9;letter-spacing:.02em}
+  .rec .nums{margin-left:auto;text-align:right;line-height:1.5}
+
   /* ── 足もと。しくみは既定でたたんでおく ── */
   .foot{flex:none;font-size:11.5px;color:#8FA9AE}
   .foot a{color:#9DB8BC}
@@ -170,6 +183,7 @@
           <span>時間 約5,000倍</span>
           <span class="go">この工法で掘る →</span>
         </div>
+        <div class="rec" data-mode="rotary" hidden><span class="badge"></span><span class="ttl"></span><span class="nums"></span></div>
       </div>
     </a>
 
@@ -183,6 +197,7 @@
           <span>時間 約1,000倍</span>
           <span class="go">この工法で掘る →</span>
         </div>
+        <div class="rec" data-mode="percussion" hidden><span class="badge"></span><span class="ttl"></span><span class="nums"></span></div>
       </div>
     </a>
 
@@ -226,6 +241,23 @@
 </div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="records.js"></script>
+<script>
+/* これまでの記録を、カードの下に出す。まだ1本も掘っていない工法には出さない。バッジの絵は art/badges/rank-N.webp（まだなければ段の数字） */
+document.querySelectorAll('.rec').forEach(el => {
+  const mode = el.dataset.mode, d = IdoRec.get(mode);
+  if (!d.wells && d.m < 1) return;
+  const t = IdoRec.title(mode), badge = el.querySelector('.badge');
+  badge.textContent = t.rank + 1;
+  const img = new Image(); img.alt = '';
+  img.onload = () => { badge.textContent = ''; badge.appendChild(img); };
+  img.src = 'art/badges/rank-' + (t.rank + 1) + '.webp';
+  el.querySelector('.ttl').innerHTML = t.name
+    + '<span class="nx">' + (t.next === null ? '最高の肩書きです' : '次の肩書きまであと ' + t.next.toLocaleString() + ' m') + '</span>';
+  el.querySelector('.nums').innerHTML = d.wells + ' 本掘った<br>累計 ' + Math.round(d.m).toLocaleString() + ' m・最深 ' + Math.round(d.deepest) + ' m';
+  el.hidden = false;
+});
+</script>
 <script>
 /* オフラインとホーム画面起動のための Service Worker */
 if ('serviceWorker' in navigator) {

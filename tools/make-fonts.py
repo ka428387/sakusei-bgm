@@ -57,7 +57,7 @@ def main():
 
     # 画面に出る文字（HTML と、その中の script の文字列）
     used = set()
-    for page in chk.PAGES:
+    for page in chk.TEXT_FILES:
         used |= chk.displayed_chars((SITE / page).read_text(encoding='utf-8'))
     kana = ''.join(chr(c) for c in range(0x3041, 0x3097)) + ''.join(chr(c) for c in range(0x30A1, 0x30FB))
     marks = 'ー・ヽヾゝゞ、。「」『』（）〜～…―─—−×÷→←↑↓♡♥●○◎▲▼■□★☆※〒！？：；＋－＝／％＆＃＄　'
